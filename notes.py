@@ -3,25 +3,49 @@ import math
 
 class _Note:
 
-    def __init__(self, noteid, octave):
+    def __init__(self, octave, noteid, bemole=False):
         super().__init__()
-        self.nid = noteid
-        self.octave = octave
+        self._nid = noteid
+        self._octave = octave
+        self._bemole = bemole
 
-    def to_semitones(self):
+    @property
+    def nid(self):
+        return self._nid
+
+    @property
+    def octave(self):
+        return self._octave
+
+    @property
+    def bemole(self):
+        return self._bemole
+
+    @property
+    def semitones_from_C0(self):
         return OCTAVE * self.octave + self.nid
+
+    def bemole_sharp(self):
+        return note_by_name(notename(self, not self.bemole))
+
+    def to_bemole(self):
+        return note_by_name(notename(self, True))
+
+    def to_sharp(self):
+        return note_by_name(notename(self, False))
+
+    @property
+    def semitones(self):
+        return self.nid
 
     def __eq__(self, other):
         if not isinstance(other, _Note):
             return False
 
-        return self.nid == other.nid
-
-    def to_str(self, bemole=False):
-        return "%s%d" % (notename(self, bemole), self.octave)
+        return self.nid == other.nid and self.octave == other.octave
 
     def __str__(self):
-        return self.to_str()
+        return notename(self, bemole=self.bemole)
 
     def __repr__(self):
         return self.__str__()
@@ -31,9 +55,9 @@ class _Note:
             raise ValueError("int expected")
         noteid = self.nid + interval
         if noteid < OCTAVE:
-            return note(noteid, self.octave)
+            return note(self.octave, self.noteid)
         else:
-            octave, noteid = move_octave(self.octave, noteid)
+            octave, noteid = _move_octave(self.octave, noteid)
             return note(noteid, octave)
 
 
@@ -96,61 +120,74 @@ def semitones_to_tones(n):
 def tones_to_semitones(n):
     return n * 2.0
 
-C = 0
-Cs = min2(C)
-Db = Cs
-D = maj2(C)
-Ds = min3(C)
-Eb = Ds
-E = maj3(C)
-F = perf4(C)
-Fs = dim5(C)
-Gb = Fs
-G = perf5(C)
-Gs = min6(C)
-Ab = Gs
-A = maj6(C)
-As = min7(C)
-Bb = As
-B = maj7(C)
+CID = 0
+CsID = min2(CID)
+DbID = CsID
+DID = maj2(CID)
+DsID = min3(CID)
+EbID = DsID
+EID = maj3(CID)
+FID = perf4(CID)
+FsID = dim5(CID)
+GbID = FsID
+GID = perf5(CID)
+GsID = min6(CID)
+AbID = GsID
+AID = maj6(CID)
+AsID = min7(CID)
+BbID = AsID
+BID = maj7(CID)
+_BEMOLES = [DbID, EbID, GbID, AbID, BbID]
 
 
 # semitones in OCTAVE
 OCTAVE = 12
 
-MAX_OCTAVE = 10
+OCTAVE_COUNT = 10
 
-_NAMES__ = {}
+_NAMES = {}
 
-_NAMES[C] = "C"
-_NAMES[Cs] = ("C#", "Db")
-_NAMES[D] = "D"
-_NAMES[Ds] = ("D#", "Eb")
-_NAMES[E] = "E"
-_NAMES[F] = "F"
-_NAMES[Fs] = ("F#", "Gb")
-_NAMES[G] = "G"
-_NAMES[Gs] = ("G#", "Ab")
-_NAMES[A] = "A"
-_NAMES[As] = ("A#", "Bb")
-_NAMES[B] = "B"
+_NAMES[CID] = "C"
+_NAMES[CsID] = ("Cs", "Db")
+_NAMES[DID] = "D"
+_NAMES[DsID] = ("Ds", "Eb")
+_NAMES[EID] = "E"
+_NAMES[FID] = "F"
+_NAMES[FsID] = ("Fs", "Gb")
+_NAMES[GID] = "G"
+_NAMES[GsID] = ("Gs", "Ab")
+_NAMES[AID] = "A"
+_NAMES[AsID] = ("As", "Bb")
+_NAMES[BID] = "B"
+
+_CHARS = {}
+
+for k, v in _NAMES.items():
+    if isinstance(v, tuple):
+        _CHARS[v[0]] = k
+        _CHARS[v[1]] = k
+    else:
+        _CHARS[v] = k
 
 
 def notename(n, bemole=False):
-    name = _NAMES[n.nid]
-    if not isinstance(name, tuple):
-        return name
-    else:
-        if bemole:
-            return name[1]
-        return name[0]
+    def getname():
+        name = _NAMES[n.nid]
+        if not isinstance(name, tuple):
+            return name
+        else:
+            if bemole:
+                return name[1]
+            return name[0]
+    name = getname()
+    return "%s%d" % (name, n.octave)
 
 
 def octave_to_semitones(octave):
     return (OCTAVE * octave)
 
 
-def move_octave(octave, interval):
+def _move_octave(octave, interval):
     semis = octave_to_semitones(octave) + interval
     new_octave = math.floor(semis / OCTAVE)
     octave_semis = octave_to_semitones(new_octave)
@@ -160,36 +197,59 @@ def move_octave(octave, interval):
 # Making notes
 
 _NOTES_BY_NAME = {}
+
 _NOTES = []
 
-for o in range(MAX_OCTAVE):
-    _NOTES.append([])
-    for i in range(0, OCTAVE, 1):
-        n = _Note(i, o)
-        _NOTES[o].append(n)
-        _NOTES_BY_NAME[notename(n, True)] = n
-        _NOTES_BY_NAME[notename(n, False)] = n
+__all__ = []
 
+
+def _register_note(n):
+    name = str(n)
+    _NOTES_BY_NAME[name] = n
+    globals()[name] = n
+    __all__.append(name)
+
+
+def _create_notes():
+    for octave_number in range(OCTAVE_COUNT):
+        _NOTES.append([])
+        for interval in range(0, OCTAVE, 1):
+            # sharp notename
+            n = _Note(octave_number, interval)
+            # print(i, o, n)
+            _NOTES[octave_number].append(n)
+            _register_note(n)
+
+            # bemole notename
+            if interval in _BEMOLES:
+                nb = _Note(octave_number, interval, True)
+                _register_note(nb)
+_create_notes()
+
+# print(globals())
 
 # getters / or kindof constructors
+
+
 def note_by_name(name):
     return _NOTES_BY_NAME[name]
 
 
-def note(octave, nid):
-    return _NOTES[octave][nid]
+def note(octave, semitones):
+    return _NOTES[octave][semitones]
 
 
-def note_from_semitones(semitones):
-    octave, nid = move_octave(0, semitones)
+def note_by_semitones(semitones):
+    octave, nid = _move_octave(0, semitones)
     return note(octave, nid)
+
 
 for o in _NOTES:
     print(o)
 
 
 if __name__ == "__main__":
-    n = note(C, 3)
+    n = note(CID, 3)
     print(n)
     n2 = n + 10
     print(n2)
