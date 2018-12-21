@@ -3,6 +3,7 @@ import random
 
 from scally.notes import *
 from scally import notes
+from scally import scales
 
 
 class TestPack(unittest.TestCase):
@@ -50,6 +51,19 @@ class TestPack(unittest.TestCase):
         self.assertEqual(C4 + 13, Cs5)
         self.assertEqual(C4 + 24, C6)
 
+    def assertScales(self, sc1, sc2):
+        self.assertEqual(sc1, sc2)
+        self.assertEqual(sc1.build(C4), sc2.build(C4))
+        self.assertNotEqual(sc1.build(C5), sc2.build(C4))
+        
+    def test_scales(self):
+        # T–T–S–T–T–T–S
+        maj = scales.scale([2, 2, 1, 2, 2, 2, 1])
+        maj2 = scales.from_semitones([2, 4, 5, 7, 9, 11])
+        print(maj.intervals)
+        print(maj2.intervals)
+        self.assertScales(maj, maj2)
+                    
 
 
 
