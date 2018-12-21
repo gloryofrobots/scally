@@ -72,22 +72,25 @@ class TestPack(unittest.TestCase):
         maj1 = scales.scale([2, 2, 1, 2, 2, 2])
         maj2 = scales.scale("2-2-1-2-2-2")
         maj3 = scales.from_semitones([2, 4, 5, 7, 9, 11])
-        maj4 = scales.from_semitones("2-4-5-7-9-11")
+        maj4 = scales.from_semitones("0-2-4-5-7-9-11-12")
         maj5 = scales.from_binary("101011010101")
         maj6 = scales.from_binary([1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1])
         maj7 = scales.from_degrees("1-2-3-4-5-6-7")
         maj8 = scales.from_degrees(["1","2","3", "4", "5", "6", "7"])
-        print(maj0)
-        print(maj1)
-        print(maj2)
-        print(maj3)
-        print(maj4)
-        print(maj5)
-        print(maj6)
-        print(maj7)
+
+        maj9 = scales.from_degrees("1-2-b3-4-5-b6-7")
+
+        self.assertScales(scales.from_degrees("1-2-b3-4-5-b6-7"), scales.from_degrees("1-2-#2-4-5-b6-7"))
+
+        print(maj9.build(A4))
+        print(maj1.semitones)
+
+        self.assertEqual(maj0.to_binary_string(), "101011010101")
+        self.assertEqual(maj0.to_semitone_string(), "0-2-4-5-7-9-11-12")
 
         self.assertScales(scales.scale("2-2-1-2-2-2-1"), scales.scale("2-2-1-2-2-2"))
         self.assertScales(scales.scale("0-2-2-1-2-2-2-1"), scales.scale("0-2-2-1-2-2-2"))
+
         self.assertScales(maj0, maj1)
         self.assertScales(maj1, maj2)
         self.assertScales(maj3, maj4)
@@ -97,7 +100,6 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj5, maj6)
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
-                    
 
 if __name__ == "__main__":
     unittest.main()
