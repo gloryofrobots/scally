@@ -1,5 +1,23 @@
 import math
 
+
+def assure_int(func):
+    def wrapper(self, *args):
+        for arg in args:
+            if not isinstance(arg, int):
+                raise ValueError("int expected")
+        return func(self, *args)
+    return wrapper
+
+
+def assure_note(func):
+    def wrapper(self, arg):
+        if not isinstance(arg, Note):
+            raise ValueError("note expected")
+        return func(self, arg)
+    return wrapper
+
+
 class Note:
 
     def __init__(self, name, interval, octave):
@@ -10,6 +28,8 @@ class Note:
         self._bemole = False
         if len(self.name) > 1:
             self._bemole = self._name[1] == "b"
+        self._semitones_from_C0 = OCTAVE_SEMITONES * \
+            self.octave + self.interval
 
     @property
     def interval(self):
@@ -29,7 +49,7 @@ class Note:
 
     @property
     def semitones_from_C0(self):
-        return OCTAVE_SEMITONES * self.octave + self.interval
+        return self._semitones_from_C0
 
     def to_bemole(self):
         return note(notename(self, True))
@@ -46,24 +66,20 @@ class Note:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    @assure_note
     def __lt__(self, other):
-        if not isinstance(other, Note):
-            raise ValueError("Illegal comparison with note")
         return self.octave <= other.octave and self.interval < other.interval
 
+    @assure_note
     def __le__(self, other):
-        if not isinstance(other, Note):
-            raise ValueError("Illegal comparison with note")
         return self.octave <= other.octave and self.interval <= other.interval
 
+    @assure_note
     def __gt__(self, other):
-        if not isinstance(other, Note):
-            raise ValueError("Illegal comparison with note")
         return self.octave >= other.octave and self.interval > other.interval
 
+    @assure_note
     def __ge__(self, other):
-        if not isinstance(other, Note):
-            raise ValueError("Illegal comparison with note")
         return self.octave >= other.octave and self.interval >= other.interval
 
     def __str__(self):
@@ -72,64 +88,66 @@ class Note:
     def __repr__(self):
         return self.__str__()
 
-    def __add__(self, interval):
-        if not isinstance(interval, int):
-            raise ValueError("int expected")
-        new_interval = self.interval + interval
-        if new_interval < OCTAVE_SEMITONES:
-            return note_by_interval(new_interval, self.octave)
-        else:
-            octave, new_interval = _move_octave(self.octave, new_interval)
-            return note_by_interval(new_interval, octave)
+    def __radd__(self, interval):
+        return self.__add__(interval)
 
+    def __add__(self, interval):
+        return self.transpose(interval)
+
+    def difference(self, note):
+        semis0 = self.semitones_from_C0
+        semis1 = note.semitones_from_C0
+        return semis0 - semis1
+
+    def __sub__(self, interval):
+        if isinstance(interval, Note):
+            return self.difference(interval)
+        elif not isinstance(interval, int):
+            raise ValueError("int or note expected")
+
+        return self.transpose(-1 * interval)
+
+    @assure_int
+    def transpose(self, interval, octave=0):
+        semis = self.semitones_from_C0
+        semis += interval + (OCTAVE_SEMITONES * octave)
+        return note_by_semitones(semis)
 
     def unison(self):
         return self
 
-
     def min2(self):
         return self + 1
-
 
     def maj2(self):
         return self + 2
 
-
     def min3(self):
         return self + 3
-
 
     def maj3(self):
         return self + 4
 
-
     def perf4(self):
         return self + 5
-
 
     def dim5(self):
         return self + 6
 
-
     def perf5(self):
         return self + 7
-
 
     def min6(self):
         return self + 8
 
-
     def maj6(self):
         return self + 9
-
 
     def min7(self):
         return self + 10
 
-
     def maj7(self):
         return self + 11
-
 
     def oct(self):
         return self + 12
@@ -232,6 +250,7 @@ _NOTES = []
 
 __all__ = []
 
+
 def _register_note(n):
     name = str(n)
     _NOTES_BY_NAME[name] = n
@@ -244,13 +263,13 @@ def _create_notes():
         _NOTES.append([])
         for interval in range(0, OCTAVE_SEMITONES, 1):
             name = get_interval_name(interval)
-            # sharp 
+            # sharp
             n = Note(name, interval, octave_number)
             # print(i, o, n)
             _NOTES[octave_number].append(n)
             _register_note(n)
 
-            # bemole 
+            # bemole
             if interval in _BEMOLES:
                 nameb = get_interval_name(interval, True)
                 nb = Note(nameb, interval, octave_number)
@@ -261,6 +280,8 @@ _create_notes()
 # print(globals())
 
 # getters / or kindof constructors
+
+
 def note(name, octave=None):
     if octave is not None:
         interval = get_name_interval(name)
