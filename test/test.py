@@ -1,7 +1,7 @@
 import unittest
 import random
 
-from scally.notes import *
+from scally.allnotes import *
 from scally import notes
 from scally import scales
 from scally import frets

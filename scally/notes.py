@@ -41,7 +41,6 @@ class Base:
         else:
             # normal name same as sharp name
             names = (names[0], names[0], names[1]) 
-        assert(len(names) < 3, "Wrong basenote names")
         self.names = names
         self.value = value
 
@@ -289,15 +288,14 @@ def octave_to_semitones(octave):
 
 # Making notes
 
+
 _NOTES_BY_NAME = {}
 _NOTES = []
 
+
 def _register_note(n):
     name = str(n)
-    print(name)
     _NOTES_BY_NAME[name] = n
-    globals()[name] = n
-    __all__.append(name)
 
 
 def _create_notes():
@@ -314,6 +312,7 @@ def _create_notes():
                 n = Note(basenote, octave_number, NORMAL)
                 _register_note(n)
                 _NOTES[octave_number].append(n)
+
 _create_notes()
 
 # print(globals())

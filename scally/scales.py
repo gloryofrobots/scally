@@ -1,4 +1,5 @@
 from scally import notes
+import scally.allnotes as ns
 
 
 DEGREE = {
@@ -20,9 +21,9 @@ SEMITONES_TO_DEGREE = {
 }
 
 
-CHROMATIC = [notes.C4, notes.Cs4, notes.D4, notes.Ds4,
-             notes.E4, notes.F4, notes.Fs4, notes.G4,
-             notes.Gs4, notes.A4, notes.As4, notes.B4]
+CHROMATIC = [ns.C4, ns.Cs4, ns.D4, ns.Ds4,
+             ns.E4, ns.F4, ns.Fs4, ns.G4,
+             ns.Gs4, ns.A4, ns.As4, ns.B4]
 
 
 class Scale:
@@ -30,7 +31,7 @@ class Scale:
     def __init__(self, intervals):
         super().__init__()
         self.intervals = intervals
-        self.c4 = self.build(notes.C4)
+        self.c4 = self.build(ns.C4)
 
         self.binary = self._build_binary()
         self.semitones = self._build_semitones()
