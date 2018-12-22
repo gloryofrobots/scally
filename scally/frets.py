@@ -6,5 +6,5 @@ class Fret:
         self.length = length
         self.strings = []
         for root in roots:
-            string = scales.chromatic.build_range(root, length)
+            string = scales.chromatic.build_range(root, length+1)
             self.strings.append(string)

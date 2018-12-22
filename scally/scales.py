@@ -76,11 +76,12 @@ class Scale:
         current = tonic
         i = 0
         for s in range(steps):
+            print(i)
             interval = self.intervals[i]
             current = current + interval
             result.append(current)
             i += 1
-            i = i % notes.OCTAVE_SEMITONES
+            i = i % notes.OCTAVE_SEMITONES + 1
 
         return result
             
