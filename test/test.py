@@ -100,12 +100,11 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj5, maj6)
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
-        print(Ds4 + 1)
 
     def test_fret(self):
         fret = frets.Fret([E4, B4, G4, D4, A4, E3], 20)
-        for string in fret.strings:
-            print(string)
+        # for string in fret.strings:
+        #     print(string)
 
 if __name__ == "__main__":
     unittest.main()

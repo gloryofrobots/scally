@@ -21,20 +21,14 @@ SEMITONES_TO_DEGREE = {
 }
 
 
-CHROMATIC = [ns.C4, ns.Cs4, ns.D4, ns.Ds4,
-             ns.E4, ns.F4, ns.Fs4, ns.G4,
-             ns.Gs4, ns.A4, ns.As4, ns.B4]
-
-
 class Scale:
 
     def __init__(self, intervals):
         super().__init__()
         self.intervals = intervals
-        self.c4 = self.build(ns.C4)
-
-        self.binary = self._build_binary()
         self.semitones = self._build_semitones()
+        self.pcs = self._build_pitch_classes()
+        self.binary = self._build_binary()
         self.degrees = self._build_degrees()
 
     def _build_degrees(self):
@@ -53,10 +47,13 @@ class Scale:
             semis.append(val)
         return semis
 
+    def _build_pitch_classes(self):
+        return [notes.get_pc(s) for s in self.semitones[0:len(self.semitones) - 1]]
+
     def _build_binary(self):
         binary = []
-        for n in CHROMATIC:
-            if n in self.c4:
+        for pc in notes.PITCH_CLASSES:
+            if pc in self.pcs:
                 binary.append(1)
             else:
                 binary.append(0)
@@ -77,7 +74,6 @@ class Scale:
         current = tonic
         i = 0
         for s in range(steps):
-            print(i)
             interval = self.intervals[i]
             current = current + interval
             result.append(current)
@@ -85,7 +81,7 @@ class Scale:
             i = i % notes.OCTAVE_SEMITONES + 1
 
         return result
-            
+
     def build(self, tonic, octaves=1, pop_last_note=True):
         result = []
         current = tonic
@@ -180,10 +176,10 @@ def from_binary(binary):
         raise ScaleBuildError("Invalid input. only ones and zeros are allowed")
 
     intervals = []
-    prev = CHROMATIC[0]
+    prev = notes.get_pc(0)
     for i, ch in enumerate(binary):
         if ch == 1:
-            note = CHROMATIC[i]
+            note = notes.get_pc(i)
             interval = note - prev
             intervals.append(interval)
             prev = note

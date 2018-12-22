@@ -1,11 +1,15 @@
 import math
 
+#############################################################
+# CLASSES
+#############################################################
+
 
 def assure_int(func):
     def wrapper(self, *args):
         for arg in args:
             if not isinstance(arg, int):
-                raise ValueError("int expected")
+                raise TypeError("int expected")
         return func(self, *args)
     return wrapper
 
@@ -13,34 +17,30 @@ def assure_int(func):
 def assure_note(func):
     def wrapper(self, arg):
         if not isinstance(arg, Note):
-            raise ValueError("note expected got %s" % str(type(arg)))
+            raise TypeError("note expected got %s" % str(type(arg)))
         return func(self, arg)
     return wrapper
 
-def assure_base(func):
+
+def assure_pc(func):
     def wrapper(self, arg):
-        if not isinstance(arg, Base):
-            raise ValueError("base note expected got %s" % str(type(arg)))
+        if not isinstance(arg, PitchClass):
+            raise TypeError("base note expected got %s" % str(type(arg)))
         return func(self, arg)
     return wrapper
 
-NORMAL = 0
-SHARP = 1
-BEMOLE = 2
 
-# normal name same as sharp name for altered degrees 
-NOTATIONS = [NORMAL, SHARP, BEMOLE]
+class PitchClass:
 
-class Base:
     def __init__(self, names, value):
         super().__init__()
         if isinstance(names, str):
             names = (names, names, names)
         elif len(names) != 2:
-            raise ValueError("Wrong basenote names")
+            raise ValueError("Wrong pc names")
         else:
             # normal name same as sharp name
-            names = (names[0], names[0], names[1]) 
+            names = (names[0], names[0], names[1])
         self.names = names
         self.value = value
 
@@ -52,10 +52,10 @@ class Base:
 
     def get_name(self, notation):
         return self.names[notation]
-        
+
     @property
     def name(self):
-        return self.get_name(NORMAL)
+        return self.get_name(NATURAL)
 
     @property
     def sharp_name(self):
@@ -64,25 +64,34 @@ class Base:
     @property
     def bemole_name(self):
         return self.get_name(BEMOLE)
-            
+
     @assure_int
     def __radd__(self, interval):
         return self.__add__(interval)
 
     @assure_int
     def __add__(self, num):
-        return self.value + num
+        new_pc = self.value + num
+        new_pc = new_pc % 12
+        return get_pc(new_pc)
 
-    @assure_int
     def __sub__(self, num):
-        return self.value - num
+        if isinstance(num, int):
+            new_pc = self.value - num
+            new_pc = new_pc % 12
+            return get_pc(new_pc)
+        elif isinstance(num, PitchClass):
+            new_pc = self.value - num.value
+            return new_pc
+        else:
+            raise TypeError("PitchClass or int expected")
 
-    @assure_int
+
     def __rsub__(self, num):
-        return num - self.value
+        raise ValueError("Invalid operation use PitchClass as left operand of a __sub__")
 
     def __eq__(self, other):
-        if not isinstance(other, Base):
+        if not isinstance(other, PitchClass):
             return False
 
         return self.value == other.value
@@ -90,43 +99,46 @@ class Base:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    @assure_base
+    @assure_pc
     def __lt__(self, other):
         return self.value < other.value
 
-    @assure_base
+    @assure_pc
     def __le__(self, other):
         return self.value <= other.value
 
-    @assure_base
+    @assure_pc
     def __gt__(self, other):
         return self.value > other.value
 
-    @assure_base
+    @assure_pc
     def __ge__(self, other):
         return self.value >= other.value
 
 
 class Note:
 
-    def __init__(self, base, octave, notation):
+    def __init__(self, pc, octave, notation):
         super().__init__()
-        self._base = base
+        self._pc = pc
         self._octave = octave
         self._notation = notation
         self._semitones_from_C0 = OCTAVE_SEMITONES * self.octave + self.value
 
+    def kindof_of(self, pc):
+        return self.pc == pc
+
     @property
-    def basenote(self):
-        return self._base
+    def pc(self):
+        return self._pc
 
     @property
     def value(self):
-        return self._base.value
+        return self._pc.value
 
     @property
     def name(self):
-        return self._base.get_name(self.notation)
+        return self._pc.get_name(self.notation)
 
     @property
     def octave(self):
@@ -141,37 +153,37 @@ class Note:
         return self._semitones_from_C0
 
     def to_bemole(self):
-        name = self.basenote.bemole_name
+        name = self.pc.bemole_name
         return note(name, self.octave)
 
     def to_sharp(self):
-        name = self.basenote.sharp_name
+        name = self.pc.sharp_name
         return note(name, self.octave)
 
     def __eq__(self, other):
         if not isinstance(other, Note):
             return False
 
-        return self.octave == other.octave and self.basenote == other.basenote
+        return self.octave == other.octave and self.pc == other.pc
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     @assure_note
     def __lt__(self, other):
-        return self.octave <= other.octave and self.basenote < other.basenote
+        return self.octave <= other.octave and self.pc < other.pc
 
     @assure_note
     def __le__(self, other):
-        return self.octave <= other.octave and self.basenote <= other.basenote
+        return self.octave <= other.octave and self.pc <= other.pc
 
     @assure_note
     def __gt__(self, other):
-        return self.octave >= other.octave and self.basenote > other.basenote
+        return self.octave >= other.octave and self.pc > other.pc
 
     @assure_note
     def __ge__(self, other):
-        return self.octave >= other.octave and self.basenote >= other.basenote
+        return self.octave >= other.octave and self.pc >= other.pc
 
     def __str__(self):
         return "%s%d" % (self.name, self.octave)
@@ -194,7 +206,7 @@ class Note:
         if isinstance(interval, Note):
             return self.difference(interval)
         elif not isinstance(interval, int):
-            raise ValueError("int or note expected")
+            raise TypeError("int or note expected")
 
         return self.transpose(-1 * interval)
 
@@ -244,6 +256,77 @@ class Note:
         return self + 12
 
 
+#############################################################
+# GLOBAL STATE AND CONSTANTS
+#############################################################
+
+
+NATURAL = 0
+SHARP = 1
+BEMOLE = 2
+
+# normal name same as sharp name for altered degrees
+NOTATIONS = [NATURAL, SHARP, BEMOLE]
+
+# Making notes
+C = PitchClass("C", 0)
+Cs = PitchClass(("Cs", "Db"), 1)
+D = PitchClass("D", 2)
+Ds = PitchClass(("Ds", "Eb"), 3)
+E = PitchClass("E", 4)
+F = PitchClass("F", 5)
+Fs = PitchClass(("Fs", "Gb"), 6)
+G = PitchClass("G", 7)
+Gs = PitchClass(("Gs", "Ab"), 8)
+A = PitchClass("A", 9)
+As = PitchClass(("As", "Bb"), 10)
+B = PitchClass("B", 11)
+
+
+PITCH_CLASSES = [C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B]
+
+
+_PITCH_CLASSES_MAPPING = {}
+for note in PITCH_CLASSES:
+    for name in note.names:
+        _PITCH_CLASSES_MAPPING[name] = note
+
+# semitones in OCTAVE
+OCTAVE_SEMITONES = 12
+
+# ten octaves from c0 to c9
+OCTAVE_COUNT = 10
+
+# dictionary with all notes
+# sharps and bemoles represented as different notes with same pitch class
+_NOTES_BY_NAME = {}
+
+# list of all unique notes (bemoles are ommitted)
+_NOTES = []
+
+
+def _create_notes():
+    def _register_note(pc, octave_number, notation, is_main_note):
+        n = Note(pc, octave_number, notation)
+        _NOTES_BY_NAME[str(n)] = n
+        if is_main_note:
+            _NOTES[octave_number].append(n)
+
+    for octave_number in range(OCTAVE_COUNT):
+        _NOTES.append([])
+        for pc in PITCH_CLASSES:
+            if pc.has_bemole():
+                _register_note(pc, octave_number, SHARP, True)
+                _register_note(pc, octave_number, BEMOLE, False)
+            else:
+                _register_note(pc, octave_number, NATURAL, True)
+_create_notes()
+
+#############################################################
+# API
+#############################################################
+
+
 def semitones_to_tones(n):
     return n / 2.0
 
@@ -251,84 +334,26 @@ def semitones_to_tones(n):
 def tones_to_semitones(n):
     return n * 2.0
 
-C = Base("C", 0)
-Cs = Base(("Cs", "Db"), 1)
-D = Base("D", 2)
-Ds = Base(("Ds", "Eb"), 3)
-E = Base("E", 4)
-F = Base("F", 5)
-Fs = Base(("Fs", "Gb"), 6)
-G = Base("G", 7)
-Gs = Base(("Gs", "Ab"), 8)
-A = Base("A", 9)
-As = Base(("As", "Bb" ), 10)
-B = Base("B", 11)
 
-
-SCALE = [C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B]
-
-_SCALE_MAPPING = {}
-for note in SCALE:
-    for name in note.names:
-        _SCALE_MAPPING[name] = note
-
-# semitones in OCTAVE
-OCTAVE_SEMITONES = 12
-
-OCTAVE_COUNT = 10
-
-
-def get_base_by_name(name):
-    return _SCALE_MAPPING[name]
+def get_pc_by_name(name):
+    return _PITCH_CLASSES_MAPPING[name]
 
 
 def octave_to_semitones(octave):
     return OCTAVE_SEMITONES * octave
 
-
-# Making notes
-
-
-_NOTES_BY_NAME = {}
-_NOTES = []
-
-
-def _register_note(n):
-    name = str(n)
-    _NOTES_BY_NAME[name] = n
-
-
-def _create_notes():
-    for octave_number in range(OCTAVE_COUNT):
-        _NOTES.append([])
-        for basenote in SCALE:
-            if basenote.has_bemole():
-                ns = Note(basenote, octave_number, SHARP)
-                _register_note(ns)
-                nb = Note(basenote, octave_number, BEMOLE)
-                _register_note(nb)
-                _NOTES[octave_number].append(ns)
-            else:
-                n = Note(basenote, octave_number, NORMAL)
-                _register_note(n)
-                _NOTES[octave_number].append(n)
-
-_create_notes()
-
-# print(globals())
-
-# getters / or kindof constructors
+# getters / kindof constructors
 
 
 def note(name, octave=None):
     if octave is not None:
-        base = get_base_by_name(name)
-        return note_by_base(base, octave)
+        base = get_pc_by_name(name)
+        return note_by_pc(base, octave)
     else:
         return _NOTES_BY_NAME[name]
 
 
-def note_by_base(base, octave):
+def note_by_pc(base, octave):
     return _NOTES[octave][base.value]
 
 
@@ -336,8 +361,8 @@ def note_by_semitones(semitones):
     octave = math.floor(semitones / OCTAVE_SEMITONES)
     octave_semis = octave_to_semitones(octave)
     value = semitones - octave_semis
-    base = SCALE[value]
-    return note_by_base(base, octave)
+    pc = PITCH_CLASSES[value]
+    return note_by_pc(pc, octave)
 
 
 def notes_from_octave(n):
@@ -345,3 +370,6 @@ def notes_from_octave(n):
         raise ValueError("Wrong octave")
     return list(iter(_NOTES[n]))
 
+
+def get_pc(number):
+    return PITCH_CLASSES[number]
