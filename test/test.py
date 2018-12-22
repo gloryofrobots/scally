@@ -4,6 +4,7 @@ import random
 from scally.notes import *
 from scally import notes
 from scally import scales
+from scally import frets
 
 class TestPack(unittest.TestCase):
     def setUp(self):
@@ -78,15 +79,14 @@ class TestPack(unittest.TestCase):
         maj7 = scales.from_degrees("1-2-3-4-5-6-7")
         maj8 = scales.from_degrees(["1","2","3", "4", "5", "6", "7"])
 
-        maj9 = scales.from_degrees("1-2-b3-4-5-b6-7")
+        # maj9 = scales.from_degrees("1-2-b3-4-5-b6-7")
+        # min1 = scales.from_degrees("1-b2-b3-b4-b5-b6-6")
 
         self.assertScales(scales.from_degrees("1-2-b3-4-5-b6-7"), scales.from_degrees("1-2-#2-4-5-b6-7"))
 
-        print(maj9.build(A4))
-        print(maj1.semitones)
-
         self.assertEqual(maj0.to_binary_string(), "101011010101")
         self.assertEqual(maj0.to_semitone_string(), "0-2-4-5-7-9-11-12")
+        self.assertEqual(maj0.to_degree_string(), "1-2-3-4-5-6-7")
 
         self.assertScales(scales.scale("2-2-1-2-2-2-1"), scales.scale("2-2-1-2-2-2"))
         self.assertScales(scales.scale("0-2-2-1-2-2-2-1"), scales.scale("0-2-2-1-2-2-2"))
@@ -100,6 +100,11 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj5, maj6)
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
+
+    def test_fret(self):
+        fret = frets.Fret([E4, B4, G4, D4, A4, E3], 14)
+        for string in fret.strings:
+            print(string)
 
 if __name__ == "__main__":
     unittest.main()

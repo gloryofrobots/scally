@@ -1,5 +1,6 @@
 from scally import notes
 
+
 DEGREE = {
     "1": 0, "#1": 1,
     "b2": 1, "2": 2, "#2": 3,
@@ -10,14 +11,18 @@ DEGREE = {
     "b7": 10, "7": 11
 }
 
-SEMITONES_TO_DEGREE = {
 
+SEMITONES_TO_DEGREE = {
+    0: "1", 1: "b2", 2: "2",
+    3: "b3", 4: "3", 5: "4",
+    6: "b5", 7: "5", 8: "b6",
+    9: "6", 10: "b7", 11: "7"
 }
+
 
 CHROMATIC = [notes.C4, notes.Cs4, notes.D4, notes.Ds4,
              notes.E4, notes.F4, notes.Fs4, notes.G4,
              notes.Gs4, notes.A4, notes.As4, notes.B4]
-
 
 
 class Scale:
@@ -26,14 +31,18 @@ class Scale:
         super().__init__()
         self.intervals = intervals
         self.c4 = self.build(notes.C4)
-        
+
         self.binary = self._build_binary()
         self.semitones = self._build_semitones()
         self.degrees = self._build_degrees()
 
     def _build_degrees(self):
+        degree = []
+        for s in self.semitones[0:len(self.semitones) - 1]:
+            d = SEMITONES_TO_DEGREE[s]
+            degree.append(d)
 
-        pass
+        return degree
 
     def _build_semitones(self):
         val = 0
@@ -53,12 +62,28 @@ class Scale:
 
         return binary
 
+    def to_degree_string(self):
+        return "-".join(map(str, self.degrees))
+
     def to_semitone_string(self):
         return "-".join(map(str, self.semitones))
 
     def to_binary_string(self):
         return "".join(map(str, self.binary))
 
+    def build_range(self, tonic, steps):
+        result = []
+        current = tonic
+        i = 0
+        for s in range(steps):
+            interval = self.intervals[i]
+            current = current + interval
+            result.append(current)
+            i += 1
+            i = i % notes.OCTAVE_SEMITONES
+
+        return result
+            
     def build(self, tonic, octaves=1, pop_last_note=True):
         result = []
         current = tonic
@@ -112,6 +137,7 @@ def scale(intervals):
         )
     return Scale(intervals)
 
+
 def from_semitones(semitones):
     if isinstance(semitones, str):
         semitones = parse_int_list(semitones)
@@ -137,7 +163,6 @@ def parse_binary_list(binary):
     return list(map(int, list(iter(binary))))
 
 
-
 def from_binary(binary):
     intervals = []
     if isinstance(binary, str):
@@ -149,7 +174,7 @@ def from_binary(binary):
     if binary[0] != 1:
         raise ScaleBuildError("Expected 1 in the leftmost position")
 
-    if len(set(binary)) != 2:
+    if len(set(binary)) > 2:
         raise ScaleBuildError("Invalid input. only ones and zeros are allowed")
 
     intervals = []
@@ -163,6 +188,7 @@ def from_binary(binary):
 
     return scale(intervals)
 
+
 def from_degrees(degrees):
     if isinstance(degrees, str):
         degrees = [val.strip() for val in degrees.split("-")]
@@ -170,7 +196,12 @@ def from_degrees(degrees):
     intervals = []
     for d in degrees:
         if d not in DEGREE:
-            raise ValueError("Invalid scale degree. accepted values x-bx-#x")
+            raise ValueError(
+                "Invalid scale degree %s. accepted values x-bx-#x" % d
+            )
+
         interval = DEGREE[d]
         intervals.append(interval)
     return from_semitones(intervals)
+
+chromatic = from_binary("1" * 12)
