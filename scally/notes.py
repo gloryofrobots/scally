@@ -13,74 +13,166 @@ def assure_int(func):
 def assure_note(func):
     def wrapper(self, arg):
         if not isinstance(arg, Note):
-            raise ValueError("note expected")
+            raise ValueError("note expected got %s" % str(type(arg)))
         return func(self, arg)
     return wrapper
+
+def assure_base(func):
+    def wrapper(self, arg):
+        if not isinstance(arg, Base):
+            raise ValueError("base note expected got %s" % str(type(arg)))
+        return func(self, arg)
+    return wrapper
+
+NORMAL = 0
+SHARP = 1
+BEMOLE = 2
+
+# normal name same as sharp name for altered degrees 
+NOTATIONS = [NORMAL, SHARP, BEMOLE]
+
+class Base:
+    def __init__(self, names, value):
+        super().__init__()
+        if isinstance(names, str):
+            names = (names, names, names)
+        elif len(names) != 2:
+            raise ValueError("Wrong basenote names")
+        else:
+            # normal name same as sharp name
+            names = (names[0], names[0], names[1]) 
+        assert(len(names) < 3, "Wrong basenote names")
+        self.names = names
+        self.value = value
+
+    def has_bemole(self):
+        return self.names[BEMOLE] != None
+
+    def has_sharp(self):
+        return self.names[SHARP] != None
+
+    def get_name(self, notation):
+        return self.names[notation]
+        
+    @property
+    def name(self):
+        return self.get_name(NORMAL)
+
+    @property
+    def sharp_name(self):
+        return self.get_name(SHARP)
+
+    @property
+    def bemole_name(self):
+        return self.get_name(BEMOLE)
+            
+    @assure_int
+    def __radd__(self, interval):
+        return self.__add__(interval)
+
+    @assure_int
+    def __add__(self, num):
+        return self.value + num
+
+    @assure_int
+    def __sub__(self, num):
+        return self.value - num
+
+    @assure_int
+    def __rsub__(self, num):
+        return num - self.value
+
+    def __eq__(self, other):
+        if not isinstance(other, Base):
+            return False
+
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    @assure_base
+    def __lt__(self, other):
+        return self.value < other.value
+
+    @assure_base
+    def __le__(self, other):
+        return self.value <= other.value
+
+    @assure_base
+    def __gt__(self, other):
+        return self.value > other.value
+
+    @assure_base
+    def __ge__(self, other):
+        return self.value >= other.value
 
 
 class Note:
 
-    def __init__(self, name, interval, octave):
+    def __init__(self, base, octave, notation):
         super().__init__()
-        self._name = name
-        self._interval = interval
+        self._base = base
         self._octave = octave
-        self._bemole = False
-        if len(self.name) > 1:
-            self._bemole = self._name[1] == "b"
-        self._semitones_from_C0 = OCTAVE_SEMITONES * \
-            self.octave + self.interval
+        self._notation = notation
+        self._semitones_from_C0 = OCTAVE_SEMITONES * self.octave + self.value
 
     @property
-    def interval(self):
-        return self._interval
+    def basenote(self):
+        return self._base
+
+    @property
+    def value(self):
+        return self._base.value
 
     @property
     def name(self):
-        return self._name
+        return self._base.get_name(self.notation)
 
     @property
     def octave(self):
         return self._octave
 
     @property
-    def bemole(self):
-        return self._bemole
+    def notation(self):
+        return self._notation
 
     @property
     def semitones_from_C0(self):
         return self._semitones_from_C0
 
     def to_bemole(self):
-        return note(notename(self, True))
+        name = self.basenote.bemole_name
+        return note(name, self.octave)
 
     def to_sharp(self):
-        return note(notename(self, False))
+        name = self.basenote.sharp_name
+        return note(name, self.octave)
 
     def __eq__(self, other):
         if not isinstance(other, Note):
             return False
 
-        return self.octave == other.octave and self.interval == other.interval
+        return self.octave == other.octave and self.basenote == other.basenote
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     @assure_note
     def __lt__(self, other):
-        return self.octave <= other.octave and self.interval < other.interval
+        return self.octave <= other.octave and self.basenote < other.basenote
 
     @assure_note
     def __le__(self, other):
-        return self.octave <= other.octave and self.interval <= other.interval
+        return self.octave <= other.octave and self.basenote <= other.basenote
 
     @assure_note
     def __gt__(self, other):
-        return self.octave >= other.octave and self.interval > other.interval
+        return self.octave >= other.octave and self.basenote > other.basenote
 
     @assure_note
     def __ge__(self, other):
-        return self.octave >= other.octave and self.interval >= other.interval
+        return self.octave >= other.octave and self.basenote >= other.basenote
 
     def __str__(self):
         return "%s%d" % (self.name, self.octave)
@@ -160,99 +252,49 @@ def semitones_to_tones(n):
 def tones_to_semitones(n):
     return n * 2.0
 
-C = 0
-Cs = 1
-Db = 1
-D = 2
-Ds = 3
-Eb = 3
-E = 4
-F = 5
-Fs = 6
-Gb = 6
-G = 7
-Gs = 8
-Ab = 8
-A = 9
-As = 10
-Bb = 10
-B = 11
+C = Base("C", 0)
+Cs = Base(("Cs", "Db"), 1)
+D = Base("D", 2)
+Ds = Base(("Ds", "Eb"), 3)
+E = Base("E", 4)
+F = Base("F", 5)
+Fs = Base(("Fs", "Gb"), 6)
+G = Base("G", 7)
+Gs = Base(("Gs", "Ab"), 8)
+A = Base("A", 9)
+As = Base(("As", "Bb" ), 10)
+B = Base("B", 11)
 
-_BEMOLES = [Db, Eb, Gb, Ab, Bb]
 
+SCALE = [C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B]
+
+_SCALE_MAPPING = {}
+for note in SCALE:
+    for name in note.names:
+        _SCALE_MAPPING[name] = note
 
 # semitones in OCTAVE
 OCTAVE_SEMITONES = 12
 
 OCTAVE_COUNT = 10
 
-_NAMES = {}
 
-_NAMES[C] = "C"
-_NAMES[Cs] = ("Cs", "Db")
-_NAMES[D] = "D"
-_NAMES[Ds] = ("Ds", "Eb")
-_NAMES[E] = "E"
-_NAMES[F] = "F"
-_NAMES[Fs] = ("Fs", "Gb")
-_NAMES[G] = "G"
-_NAMES[Gs] = ("Gs", "Ab")
-_NAMES[A] = "A"
-_NAMES[As] = ("As", "Bb")
-_NAMES[B] = "B"
-
-
-_INTERVALS = {}
-for k, v in _NAMES.items():
-    if isinstance(v, tuple):
-        _INTERVALS[v[0]] = k
-        _INTERVALS[v[1]] = k
-    else:
-        _INTERVALS[v] = k
-
-
-def get_name_interval(name):
-    return _INTERVALS[name]
-
-
-def get_interval_name(interval, bemole=False):
-    name = _NAMES[interval]
-    if not isinstance(name, tuple):
-        return name
-    else:
-        if bemole:
-            return name[1]
-        return name[0]
-
-
-def notename(n, bemole=False):
-    name = get_interval_name(n.interval)
-    return "%s%d" % (name, n.octave)
+def get_base_by_name(name):
+    return _SCALE_MAPPING[name]
 
 
 def octave_to_semitones(octave):
     return OCTAVE_SEMITONES * octave
 
 
-def _move_octave(octave, interval):
-    semis = octave_to_semitones(octave) + interval
-    new_octave = math.floor(semis / OCTAVE_SEMITONES)
-    # print("<<", new_octave, semis)
-    octave_semis = octave_to_semitones(new_octave)
-    new_interval = semis - octave_semis
-    # print("<1",new_octave, new_interval, semis, octave_semis)
-    return (new_octave, new_interval)
-
 # Making notes
 
 _NOTES_BY_NAME = {}
 _NOTES = []
 
-__all__ = []
-
-
 def _register_note(n):
     name = str(n)
+    print(name)
     _NOTES_BY_NAME[name] = n
     globals()[name] = n
     __all__.append(name)
@@ -261,20 +303,17 @@ def _register_note(n):
 def _create_notes():
     for octave_number in range(OCTAVE_COUNT):
         _NOTES.append([])
-        for interval in range(0, OCTAVE_SEMITONES, 1):
-            name = get_interval_name(interval)
-            # sharp
-            n = Note(name, interval, octave_number)
-            # print(i, o, n)
-            _NOTES[octave_number].append(n)
-            _register_note(n)
-
-            # bemole
-            if interval in _BEMOLES:
-                nameb = get_interval_name(interval, True)
-                nb = Note(nameb, interval, octave_number)
+        for basenote in SCALE:
+            if basenote.has_bemole():
+                ns = Note(basenote, octave_number, SHARP)
+                _register_note(ns)
+                nb = Note(basenote, octave_number, BEMOLE)
                 _register_note(nb)
-
+                _NOTES[octave_number].append(ns)
+            else:
+                n = Note(basenote, octave_number, NORMAL)
+                _register_note(n)
+                _NOTES[octave_number].append(n)
 _create_notes()
 
 # print(globals())
@@ -284,22 +323,22 @@ _create_notes()
 
 def note(name, octave=None):
     if octave is not None:
-        interval = get_name_interval(name)
-        return note_by_interval(interval, octave)
+        base = get_base_by_name(name)
+        return note_by_base(base, octave)
     else:
         return _NOTES_BY_NAME[name]
 
 
-def note_by_interval(interval, octave):
-    if interval > OCTAVE_SEMITONES:
-        raise ValueError("Wrong note interval")
-
-    return _NOTES[octave][interval]
+def note_by_base(base, octave):
+    return _NOTES[octave][base.value]
 
 
 def note_by_semitones(semitones):
-    octave, new_interval = _move_octave(0, semitones)
-    return note_by_interval(new_interval, octave)
+    octave = math.floor(semitones / OCTAVE_SEMITONES)
+    octave_semis = octave_to_semitones(octave)
+    value = semitones - octave_semis
+    base = SCALE[value]
+    return note_by_base(base, octave)
 
 
 def notes_from_octave(n):
@@ -307,12 +346,3 @@ def notes_from_octave(n):
         raise ValueError("Wrong octave")
     return list(iter(_NOTES[n]))
 
-if __name__ == "__main__":
-    n = note(CID, 3)
-    print(n)
-    n2 = n + 10
-    print(n2)
-    n3 = n + 13
-    print(n3)
-    n4 = n + OCTAVE_SEMITONES * 10
-    print(n4)
