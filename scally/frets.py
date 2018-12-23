@@ -20,11 +20,12 @@ class String:
 class Fret:
     def __init__(self, roots, length):
         super().__init__()
-        self.length = length
         self.strings = []
         for root in roots:
             notes = scales.chromatic.build_range(root, length+1)
             self.strings.append(String(notes))
+        self.width = length
+        self.height = len(self.strings)
 
 class Builder:
     def __init__(self):
@@ -101,9 +102,8 @@ class FretView:
         b.add(":: ", self.note_str(string.open_note), " :: ")
         notes = string.fretted_notes
 
-        length = len(notes)
-        last = length - 1
-        for i in range(length):
+        last = self.fret.width - 1
+        for i in range(self.fret.width):
             note = notes[i]
             note_str = self.note_str(note)
             if i < last:
@@ -113,13 +113,25 @@ class FretView:
                 
             b.add(note_str, padding)
 
+    def _build_numeration(self, b):
+        b.add("   ", "   ", "    ")
+        last = self.fret.width - 1
+        for i in range(self.fret.width):
+            s = str(i)
+            if len(s) == 1:
+                s = " %s " + s
+            elif len(s) == 2:
+                s = " %s" + s
+                
+            b.add(s, padding)
+        b.nl()
+
     def to_ascii(self):
         b = Builder()
         strings = self.strings_in_display_order()
             
-        length = len(strings)
-        last = length - 1
-        for i in range(len(strings)):
+        last = self.fret.height - 1
+        for i in range(self.fret.height):
             string = strings[i]
             self._build_string(b, string)
             b.nl()
@@ -128,7 +140,8 @@ class FretView:
             else:
                 b.append_pad_line("=")
                 
-
         b.prepend_pad_line("=")
+        b.nl()
+
+        self._build_numeration(b)
         return b.build()
-            
