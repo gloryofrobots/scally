@@ -106,15 +106,15 @@ class TestPack(unittest.TestCase):
     #     maj = scales.scale("2-2-1-2-2-2")
     #     print(maj.forkey(C).pcs)
 
-    def test_fret(self):
-        fret = frets.Fret([E2, As2, D3, G3, B3, E4], 24)
-        view = frets.FretView(fret)
-        maj = scales.scale("2-2-1-2-2-2")
-        print(maj.forkey(C).pcs)
-        # view.add_filter(maj.forkey(notes.C))
-        print(view.to_ascii())
-        # for string in fret.strings:
-        #     print(string)
+    # def test_fret(self):
+    #     fret = frets.Fret([E2, As2, D3, G3, B3, E4], 24)
+    #     view = frets.FretView(fret)
+    #     maj = scales.scale("2-2-1-2-2-2")
+    #     print(maj.forkey(C).pcs)
+    #     # view.add_filter(maj.forkey(notes.C))
+    #     print(view.to_ascii())
+    #     # for string in fret.strings:
+    #     #     print(string)
 
 if __name__ == "__main__":
     unittest.main()
