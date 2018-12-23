@@ -102,7 +102,9 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj1, maj8)
 
     def test_fret(self):
-        fret = frets.Fret([E4, B4, G4, D4, A4, E3], 20)
+        fret = frets.Fret([E2, As2, D3, G3, B3, E4], 24)
+        view = frets.FretView(fret)
+        print(view.to_ascii())
         # for string in fret.strings:
         #     print(string)
 

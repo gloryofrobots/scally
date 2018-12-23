@@ -20,8 +20,7 @@ SEMITONES_TO_DEGREE = {
     9: "6", 10: "b7", 11: "7"
 }
 
-
-class Scale:
+class Template:
 
     def __init__(self, intervals):
         super().__init__()
@@ -93,6 +92,7 @@ class Scale:
                 current = note
         if pop_last_note:
             result.pop()
+
         return result
 
     def __str__(self):
@@ -102,7 +102,7 @@ class Scale:
         return self.__str__()
 
     def __eq__(self, other):
-        if not isinstance(other, Scale):
+        if not isinstance(other, Template):
             return False
 
         return self.intervals == other.intervals
@@ -133,7 +133,7 @@ def scale(intervals):
             "Transition to octave tonic will be inserted automatically"
             % notes.OCTAVE_SEMITONES
         )
-    return Scale(intervals)
+    return Template(intervals)
 
 
 def from_semitones(semitones):
@@ -203,3 +203,20 @@ def from_degrees(degrees):
     return from_semitones(intervals)
 
 chromatic = from_binary("1" * 12)
+
+
+# import json
+# import yaml
+# import os.path
+
+# with open(os.path.dirname(__file__) + "/db.json") as f:
+#     jdb = f.read()
+# jdb = json.loads(jdb)
+# print(jdb)
+
+# with open(os.path.dirname(__file__) + "/db.yml") as f:
+#     ydb = f.read()
+
+
+# ydb = yaml.load(ydb)
+# print(ydb)

@@ -35,20 +35,20 @@ class PitchClass:
     def __init__(self, names, value):
         super().__init__()
         if isinstance(names, str):
-            names = (names, names, names)
+            names = (names, None, None)
         elif len(names) != 2:
             raise ValueError("Wrong pc names")
         else:
             # normal name same as sharp name
-            names = (names[0], names[0], names[1])
+            names = (None, names[0], names[1])
         self.names = names
         self.value = value
 
     def has_bemole(self):
-        return self.names[BEMOLE] != None
+        return self.names[BEMOLE] is not None
 
     def has_sharp(self):
-        return self.names[SHARP] != None
+        return self.names[SHARP] is not None
 
     def get_name(self, notation):
         return self.names[notation]
@@ -151,6 +151,9 @@ class Note:
     @property
     def semitones_from_C0(self):
         return self._semitones_from_C0
+
+    def has_bemole(self):
+        return self.pc.has_bemole()
 
     def to_bemole(self):
         name = self.pc.bemole_name
