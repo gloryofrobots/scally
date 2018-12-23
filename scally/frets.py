@@ -51,11 +51,11 @@ class Builder:
         line = padding * count
         return line
         
-    def prepend_pad_line(self, padding):
+    def insert_pad_line(self, index, padding):
         prev = self.lines[0]
         data = self._build_pad_line(prev, padding)
         line = [data]
-        self.lines.insert(0, line)
+        self.lines.insert(index, line)
 
     def append_pad_line(self, padding):
         prev = self.lines[len(self.lines) - 2]
@@ -114,22 +114,23 @@ class FretView:
             b.add(note_str, padding)
 
     def _build_numeration(self, b):
-        b.add("   ", "   ", "    ")
-        last = self.fret.width - 1
-        for i in range(self.fret.width):
+        b.add("   ", " 0 ", "    ")
+        for i in range(1, self.fret.width + 1):
             s = str(i)
             if len(s) == 1:
-                s = " %s " + s
+                s = " %s " % s
             elif len(s) == 2:
-                s = " %s" + s
+                s = " %s" % s
                 
-            b.add(s, padding)
+            b.add(s, "   ")
         b.nl()
 
     def to_ascii(self):
         b = Builder()
         strings = self.strings_in_display_order()
             
+        # b.nl()
+        self._build_numeration(b)
         last = self.fret.height - 1
         for i in range(self.fret.height):
             string = strings[i]
@@ -140,8 +141,8 @@ class FretView:
             else:
                 b.append_pad_line("=")
                 
-        b.prepend_pad_line("=")
-        b.nl()
+        b.insert_pad_line(1, "=")
+        # b.nl()
 
         self._build_numeration(b)
         return b.build()
