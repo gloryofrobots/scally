@@ -27,11 +27,15 @@ class Fret:
     def __init__(self, roots, length):
         super().__init__()
         self.strings = []
+        self.width = length + 1
         for root in roots:
-            notes = scales.chromatic.forrange(root, length+1)
+            notes = scales.chromatic.forrange(root, self.width)
             self.strings.append(String(notes))
-        self.width = length
         self.height = len(self.strings)
+
+    @property
+    def count_bars(self):
+        return self.width - 1
 
     def get_string(self, y):
         return self.strings[y]
@@ -146,7 +150,7 @@ class FretView:
 
     def _build_numeration(self, b):
         b.add("   ", " 0 ", "    ")
-        for i in range(1, self.fret.width + 1):
+        for i in range(1, self.fret.width):
             s = str(i)
             if len(s) == 1:
                 s = " %s " % s
@@ -166,10 +170,10 @@ class FretView:
         for y in range(self.fret.height - 1, -1, -1):
             self._build_string(b, y)
             b.nl()
-            if y < last:
-                b.append_pad_line("-")
-            else:
+            if y == 0:
                 b.append_pad_line("=")
+            else:
+                b.append_pad_line("-")
                 
         b.insert_pad_line(1, "=")
         # b.nl()

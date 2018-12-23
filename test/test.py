@@ -110,7 +110,7 @@ class TestPack(unittest.TestCase):
         view = frets.FretView(fret)
         maj = scales.scale("2-2-1-2-2-2")
         print(maj.forkey(C).pcs)
-        view.add_filter(maj.forkey(notes.C))
+        # view.add_filter(maj.forkey(notes.C))
         print(view.to_ascii())
         # for string in fret.strings:
         #     print(string)
