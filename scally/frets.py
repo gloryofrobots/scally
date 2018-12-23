@@ -10,11 +10,17 @@ class String:
     def fretted_notes(self):
         return self.notes[1:]
 
+    def __getitem__(self, i):
+        return self.notes[i]
+
     def __str__(self):
         return str(self.notes)
 
     def __repr__(self):
         return self.__str__()
+
+    def __iter__(self):
+        return self.notes.__iter__()
     
 
 class Fret:
@@ -22,10 +28,17 @@ class Fret:
         super().__init__()
         self.strings = []
         for root in roots:
-            notes = scales.chromatic.build_range(root, length+1)
+            notes = scales.chromatic.forrange(root, length+1)
             self.strings.append(String(notes))
         self.width = length
         self.height = len(self.strings)
+
+    def get_string(self, y):
+        return self.strings[y]
+
+    def get_note(self, x, y):
+        return self.strings[y][x]
+
 
 class Builder:
     def __init__(self):
@@ -69,44 +82,62 @@ class Builder:
 class FretView:
     def __init__(self, fret):
         self.fret = fret
-        self.scales = []
+        self.filters = []
+        self.enabled = None
+        self.enabled = []
+        for y,_ in enumerate(self.fret.strings):
+            self.enabled.append([True] * self.fret.width)
 
-    def add(self, scale):
-        if scale in self.scales:
-            return False
-        self.scales.append(scale)
-        return True
+    def reset_filters(self):
+        if len(self.filters) == 0:
+            for y in range(self.fret.height):
+                for x in range(self.fret.width):
+                    self.enabled[y][x] = True
+        else:
+            for y in range(self.fret.height):
+                for x in range(self.fret.width):
+                    n = self.fret.get_note(x, y)
+                    val = False
+                    for f in self.filters:
+                        if n in f:
+                            val = True
+                            break
+                    self.enabled[y][x] = val
 
-    def has(self, scale):
+    def add_filter(self, f):
+        if f not in self.filters:
+            self.filters.append(f)
+
+        self.reset_filters()
+
+    def has_filter(self, f):
         return scale in self.scales
 
-    def remove(self, scale):
-        self.scales.remove(scale)
+    def remove_filter(self, f):
+        self.scales.remove(f)
 
     def strings_in_display_order(self):
         return list(reversed(self.fret.strings))
 
-    def is_note_enabled(self, note):
-        return note.has_bemole()
-        return True
+    def is_note_enabled(self, x, y):
+        return self.enabled[y][x]
 
-    def note_str(self, note):
-        if not self.is_note_enabled(note):
+    def note_str(self, x, y):
+        note = self.fret.get_note(x, y)
+        if not self.is_note_enabled(x, y):
             return "   "
         if note.has_bemole():
             return str(note)
         else:
             return str(note) + " "
             
-    def _build_string(self, b, string):
-        b.add(":: ", self.note_str(string.open_note), " :: ")
-        notes = string.fretted_notes
+    def _build_string(self, b, y):
+        b.add(":: ", self.note_str(0, y), " :: ")
 
         last = self.fret.width - 1
-        for i in range(self.fret.width):
-            note = notes[i]
-            note_str = self.note_str(note)
-            if i < last:
+        for x in range(1, self.fret.width):
+            note_str = self.note_str(x, y)
+            if x < last:
                 padding = " | "
             else:
                 padding = " ::"
@@ -132,11 +163,10 @@ class FretView:
         # b.nl()
         self._build_numeration(b)
         last = self.fret.height - 1
-        for i in range(self.fret.height):
-            string = strings[i]
-            self._build_string(b, string)
+        for y in range(self.fret.height - 1, -1, -1):
+            self._build_string(b, y)
             b.nl()
-            if i < last:
+            if y < last:
                 b.append_pad_line("-")
             else:
                 b.append_pad_line("=")

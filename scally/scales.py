@@ -68,32 +68,29 @@ class Template:
     def to_binary_string(self):
         return "".join(map(str, self.binary))
 
-    def build_range(self, tonic, steps):
+    def fornote(self, tonic, octaves=1, pop_last=True):
+        pc = tonic.pc
+        octave = tonic.octave
+        return self.forkey(pc).build_octave(octave, octaves, pop_last)
+
+    def forrange(self, tonic, steps):
+        pc = tonic.pc
+        octave = tonic.octave
+        return self.forkey(pc).build_range(octave, steps)
+        
+    def forkey(self, pc):
+        if not isinstance(pc, notes.PitchClass):
+            raise TypeError("PitchClass expected")
+
         result = []
-        current = tonic
-        i = 0
-        for s in range(steps):
-            interval = self.intervals[i]
+        current = pc
+        for interval in self.intervals:
+            # distance = i * notes.OCTAVE_SEMITONES + interval
             current = current + interval
             result.append(current)
-            i += 1
-            i = i % notes.OCTAVE_SEMITONES + 1
 
-        return result
-
-    def build(self, tonic, octaves=1, pop_last_note=True):
-        result = []
-        current = tonic
-        for i in range(octaves):
-            for interval in self.intervals:
-                # distance = i * notes.OCTAVE_SEMITONES + interval
-                note = current + interval
-                result.append(note)
-                current = note
-        if pop_last_note:
-            result.pop()
-
-        return result
+        result.pop()
+        return Scale(self, result)
 
     def __str__(self):
         return "<scale %s>" % "-".join(map(str, self.intervals))
@@ -106,6 +103,58 @@ class Template:
             return False
 
         return self.intervals == other.intervals
+
+class Scale:
+    def __init__(self, template, pcs):
+        super().__init__()
+        self.template = template
+        self.pcs = pcs
+        self.root = self.pcs[0]
+
+    def build_range(self, octave, steps):
+        result = []
+        current = self.root.foroctave(octave)
+        i = 0
+        for _ in range(steps):
+            interval = self.template.intervals[i]
+            current = current + interval
+            result.append(current)
+            i += 1
+            i = i % notes.OCTAVE_SEMITONES + 1
+
+        return result
+
+    def build_octave(self, octave, octaves=1, pop_last=True):
+        result = []
+        current = self.root.foroctave(octave)
+        for i in range(octaves):
+            for interval in self.template.intervals:
+                # distance = i * notes.OCTAVE_SEMITONES + interval
+                note = current + interval
+                result.append(note)
+                current = note
+        if pop_last:
+            result.pop()
+
+        return result
+
+    def has_note(self, note):
+        for pc in self.pcs:
+            if pc.has_note(note):
+                return True
+        return False
+                
+    def has_pc(self, _pc):
+        for pc in self.pcs:
+            if pc == _pc:
+                return True
+        return False
+
+    def __contains__(self, note):
+        if isinstance(note, notes.Note):
+            return self.has_note(note)
+        elif isinstance(note, notes.PitchClass):
+            return self.has_pc(note)
 
 
 class ScaleBuildError(RuntimeError):

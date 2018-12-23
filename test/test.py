@@ -64,8 +64,8 @@ class TestPack(unittest.TestCase):
 
     def assertScales(self, sc1, sc2):
         self.assertEqual(sc1, sc2)
-        self.assertEqual(sc1.build(C4), sc2.build(C4))
-        self.assertNotEqual(sc1.build(C5), sc2.build(C4))
+        self.assertEqual(sc1.fornote(C4), sc2.fornote(C4))
+        self.assertNotEqual(sc1.fornote(C5), sc2.fornote(C4))
         
     def test_scales(self):
         print("---test scales ---")
@@ -101,9 +101,16 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
 
+    # def test_pc(self):
+    #     maj = scales.scale("2-2-1-2-2-2")
+    #     print(maj.forkey(C).pcs)
+
     def test_fret(self):
         fret = frets.Fret([E2, As2, D3, G3, B3, E4], 24)
         view = frets.FretView(fret)
+        maj = scales.scale("2-2-1-2-2-2")
+        print(maj.forkey(C).pcs)
+        view.add_filter(maj.forkey(notes.C))
         print(view.to_ascii())
         # for string in fret.strings:
         #     print(string)

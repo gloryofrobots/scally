@@ -44,6 +44,9 @@ class PitchClass:
         self.names = names
         self.value = value
 
+    def __hash__(self):
+        return self.value
+
     def has_bemole(self):
         return self.names[BEMOLE] is not None
 
@@ -52,6 +55,12 @@ class PitchClass:
 
     def get_name(self, notation):
         return self.names[notation]
+
+    def has_note(self, note):
+        return note.pc == self
+
+    def foroctave(self, octave):
+        return note_by_pc(self, octave)
 
     @property
     def name(self):
@@ -115,6 +124,14 @@ class PitchClass:
     def __ge__(self, other):
         return self.value >= other.value
 
+    def __str__(self):
+        if self.has_sharp():
+            return self.get_name(SHARP)
+        return self.get_name(NATURAL)
+
+    def __repr__(self):
+        return str(self)
+
 
 class Note:
 
@@ -125,7 +142,7 @@ class Note:
         self._notation = notation
         self._semitones_from_C0 = OCTAVE_SEMITONES * self.octave + self.value
 
-    def kindof_of(self, pc):
+    def kindof(self, pc):
         return self.pc == pc
 
     @property
@@ -356,8 +373,8 @@ def note(name, octave=None):
         return _NOTES_BY_NAME[name]
 
 
-def note_by_pc(base, octave):
-    return _NOTES[octave][base.value]
+def note_by_pc(pc, octave):
+    return _NOTES[octave][pc.value]
 
 
 def note_by_semitones(semitones):
