@@ -5,6 +5,7 @@ from scally.allnotes import *
 from scally import notes
 from scally import scales
 from scally import frets
+from scally import db
 
 class TestPack(unittest.TestCase):
     def setUp(self):

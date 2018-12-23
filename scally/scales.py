@@ -253,19 +253,3 @@ def from_degrees(degrees):
 
 chromatic = from_binary("1" * 12)
 
-
-# import json
-# import yaml
-# import os.path
-
-# with open(os.path.dirname(__file__) + "/db.json") as f:
-#     jdb = f.read()
-# jdb = json.loads(jdb)
-# print(jdb)
-
-# with open(os.path.dirname(__file__) + "/db.yml") as f:
-#     ydb = f.read()
-
-
-# ydb = yaml.load(ydb)
-# print(ydb)
