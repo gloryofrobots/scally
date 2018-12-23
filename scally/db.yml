@@ -36,7 +36,7 @@ scales:
    degrees: '1 b2 b3 4 b5 b6 b7'
 
 #-----------------------------------------------------------
-# HARMONIC
+# harmonic
 #-----------------------------------------------------------
 
   - # -----------------------------
@@ -46,110 +46,110 @@ scales:
 
 
   - # -----------------------------
-   name: [locrian becar 6, Harmonic Minor Mode II, 'Locrian #6']
+   name: [locrian becar 6, harmonic minor mode ii, 'locrian #6']
    category: harmonic-minor
    degrees:  '1 b2 b3 4 b5 6 b7'
 
 
   - # -----------------------------
-   name: [Ionian Augmented, 'Ionian #5']
+   name: [ionian augmented, 'ionian #5']
    category: harmonic-minor
    degrees:  '1 2 3 4 #5 6 7'
 
 
   - # -----------------------------
-   name: [Overtone Minor, 'Dorian #4', 'ukainian dorian']
+   name: [overtone minor, 'dorian #4', 'ukainian dorian']
    category: harmonic-minor
    degrees:  '1 2 b3 #4 5 6 b7'
 
 
   - # -----------------------------
-   name: [Phrygian Major, Spanish, Jewish]
+   name: [phrygian major, spanish, jewish]
    category: harmonic-minor
    degrees:  '1 b2 3 4 5 b6 b7'
 
 
   - # -----------------------------
-   name: ['Lydian #2', 'lydian #9']
+   name: ['lydian #2', 'lydian #9']
    category: harmonic-minor
    degrees:  '1 #2 3 #4 5 6 7'
 
 
   - # -----------------------------
-   name: [Altered bb7, Super Locrian bb7, Altered n6]
+   name: [altered bb7, super locrian bb7, altered n6]
    category: harmonic-minor
    degrees:  '1 b2 b3 b4 b5 b6 bb7'
 
   - # -----------------------------
-   name: [Hungarian minor]
+   name: [hungarian minor]
    category: harmonic-minor
    degrees:  '1 2 b3 #4 5 b6 7'
 
 #-----------------------------------------------------------
-# MELODIC
+# melodic
 #-----------------------------------------------------------
 
   - # -----------------------------
    name: [melodic minor]
    category: melodic-minor
-   degrees:  **1 2 b3 4 5 6 7**
+   degrees:  '1 2 b3 4 5 6 7'
 
   - # -----------------------------
-   name: [Phrygian n6, Dorian b2]
+   name: [phrygian n6, dorian b2]
    category: melodic-minor
-   degrees:  **1 b2 b3 4 5 6 b7**
+   degrees:  '1 b2 b3 4 5 6 b7'
 
   - # -----------------------------
-   name: [Lydian Augmented]
+   name: [lydian augmented]
    category: melodic-minor
-   degrees:  **1-2-3-#4-#5-6-7**
+   degrees:  '1-2-3-#4-#5-6-7'
 
   - # -----------------------------
-   name: [Lydian dominant, Lydian b7, 'Mixolydian #4', Overtone scale]
+   name: [lydian dominant, lydian b7, 'mixolydian #4', overtone scale]
    category: melodic-minor
-   degrees:  **1 2 3 #4 5 6 b7**
+   degrees:  '1 2 3 #4 5 6 b7'
 
   - # -----------------------------
-   name: [Myxolydian b6, Hindu, Aeolian Major]
+   name: [myxolydian b6, hindu, aeolian major]
    category: melodic-minor
-   degrees:  **1 2 3 4 5 b6 b7**
+   degrees:  '1 2 3 4 5 b6 b7'
 
   - # -----------------------------
-   name: [Locrian n2, Aeolian b5 'Half-Diminished #2']
+   name: [locrian n2, aeolian b5 'half-diminished #2']
    category: melodic-minor
-   degrees:  **1 2 b3 4 b5 b6 b7**
+   degrees:  '1 2 b3 4 b5 b6 b7'
 
 
   - # -----------------------------
-   name: [Altered scale, Diminished Whole Tone Altered Dominant, Pomeroy, Ravel]
+   name: [altered scale, diminished whole tone altered dominant, pomeroy, ravel]
    category: melodic-minor
-   degrees:  **1 b2 b3 b4 b5 b6 b7**
+   degrees:  '1 b2 b3 b4 b5 b6 b7'
 
 #-----------------------------------------------------------
-# DIMINISHED
+# diminished
 #-----------------------------------------------------------
 
   - # -----------------------------
-   name: [Whole-Half]
+   name: [whole-half]
    category: diminished
-   degrees:  **1 2 b3 4 #4 #5 6 7**
+   degrees:  '1 2 b3 4 #4 #5 6 7'
 
 
   - # -----------------------------
-   name: [Half-Whole ]
+   name: [half-whole]
    category: diminished
    degrees:  '1 b2 b3 3 #4 5 6 b7'
 
 
   - # -----------------------------
-   name: [Whole Tone]
+   name: [whole tone]
    category: diminished
    degrees:  '1 2 3 #4 #5 b7'
 
 #-----------------------------------------------------------
 #-----------------------------------------------------------
 #-----------------------------------------------------------
-# CHORDS
+# chords
 #-----------------------------------------------------------
 #-----------------------------------------------------------
 #-----------------------------------------------------------
@@ -162,3 +162,11 @@ chords:
   -
    name: [maj7, M7]
    degrees: 1-3-5-7
+
+  -
+   name: [Cmaj7#5, maj7+, +7+5]
+   degrees: 1-3-#5-7
+
+  -
+   name: [Cmaj7#5, maj7+, +7+5]
+   degrees: 1-3-#5-7
