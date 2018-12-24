@@ -9,7 +9,15 @@ DEGREE = {
     "b4": 4, "4": 5, "#4": 6,
     "b5": 6, "5": 7, "#5": 8,
     "b6": 8, "6": 9, "#6": 10,
-    "b7": 10, "7": 11
+    "b7": 10, "7": 11,
+
+    "8": 12, "#8": 13,
+    "b9": 13, "9": 14, "#9": 15,
+    "b10": 15,  "10": 16, "#10": 16,
+    "b11": 16, "11": 17, "#11": 18,
+    "b12": 18, "12": 19, "#12": 20,
+    "b13": 20, "13": 21, "#13": 22,
+    "b14": 22, "14": 23,
 }
 
 
@@ -165,7 +173,7 @@ def parse_int_list(semitones):
     return [int(val.strip()) for val in semitones.split("-")]
 
 
-def scale(intervals):
+def from_intervals(intervals):
     if isinstance(intervals, str):
         intervals = parse_int_list(intervals)
     intervals = intervals[:]
@@ -203,7 +211,7 @@ def from_semitones(semitones):
         intervals.append(interval)
         prev = s
 
-    return scale(intervals)
+    return from_intervals(intervals)
 
 
 def parse_binary_list(binary):
@@ -233,7 +241,7 @@ def from_binary(binary):
             intervals.append(interval)
             prev = note
 
-    return scale(intervals)
+    return from_intervals(intervals)
 
 
 def from_degrees(degrees):
@@ -252,4 +260,3 @@ def from_degrees(degrees):
     return from_semitones(intervals)
 
 chromatic = from_binary("1" * 12)
-

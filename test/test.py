@@ -5,7 +5,7 @@ from scally.allnotes import *
 from scally import notes
 from scally import scales
 from scally import frets
-from scally import db
+from scally import library
 
 class TestPack(unittest.TestCase):
     def setUp(self):
@@ -70,9 +70,9 @@ class TestPack(unittest.TestCase):
         
     def test_scales(self):
         print("---test scales ---")
-        maj0 = scales.scale([0, 2, 2, 1, 2, 2, 2, 1])
-        maj1 = scales.scale([2, 2, 1, 2, 2, 2])
-        maj2 = scales.scale("2-2-1-2-2-2")
+        maj0 = scales.from_intervals([0, 2, 2, 1, 2, 2, 2, 1])
+        maj1 = scales.from_intervals([2, 2, 1, 2, 2, 2])
+        maj2 = scales.from_intervals("2-2-1-2-2-2")
         maj3 = scales.from_semitones([2, 4, 5, 7, 9, 11])
         maj4 = scales.from_semitones("0-2-4-5-7-9-11-12")
         maj5 = scales.from_binary("101011010101")
@@ -89,8 +89,8 @@ class TestPack(unittest.TestCase):
         self.assertEqual(maj0.to_semitone_string(), "0-2-4-5-7-9-11-12")
         self.assertEqual(maj0.to_degree_string(), "1-2-3-4-5-6-7")
 
-        self.assertScales(scales.scale("2-2-1-2-2-2-1"), scales.scale("2-2-1-2-2-2"))
-        self.assertScales(scales.scale("0-2-2-1-2-2-2-1"), scales.scale("0-2-2-1-2-2-2"))
+        self.assertScales(scales.from_intervals("2-2-1-2-2-2-1"), scales.from_intervals("2-2-1-2-2-2"))
+        self.assertScales(scales.from_intervals("0-2-2-1-2-2-2-1"), scales.from_intervals("0-2-2-1-2-2-2"))
 
         self.assertScales(maj0, maj1)
         self.assertScales(maj1, maj2)
@@ -102,6 +102,11 @@ class TestPack(unittest.TestCase):
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
 
+    def test_lib(self):
+        lib = library.load()
+        names, maj = lib.find_scale("maj")
+        print(names, maj)
+        
     # def test_pc(self):
     #     maj = scales.scale("2-2-1-2-2-2")
     #     print(maj.forkey(C).pcs)

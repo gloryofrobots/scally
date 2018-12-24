@@ -304,7 +304,7 @@ B = PitchClass("B", 11)
 
 
 PITCH_CLASSES = [C, Cs, D, Ds, E, F, Fs, G, Gs, A, As, B]
-
+# PITCH_CLASS_NAMES = [pc.name for pc in PITCH_CLASSES]
 
 _PITCH_CLASSES_MAPPING = {}
 for note in PITCH_CLASSES:
@@ -390,6 +390,11 @@ def notes_from_octave(n):
         raise ValueError("Wrong octave")
     return list(iter(_NOTES[n]))
 
+def has_pc(name):
+    for pc in pcs:
+        if pc.has_name(name):
+            return True
+    return False
 
 def get_pc(number):
     return PITCH_CLASSES[number]

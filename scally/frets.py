@@ -24,7 +24,7 @@ class String:
     
 
 class Fret:
-    def __init__(self, roots, length):
+    def __init__(self, length, roots):
         super().__init__()
         self.strings = []
         self.width = length + 1
@@ -180,3 +180,12 @@ class FretView:
 
         self._build_numeration(b)
         return b.build()
+
+def fret(length, roots):
+    if length < 0:
+        raise ValueError("Negative fret length")
+    if len(roots) == 0:
+        raise ValueError("Empty fret")
+    if isinstance(roots[0], str):
+        roots = [notes.note(r) for r in roots]
+    return Fret(length, roots)
