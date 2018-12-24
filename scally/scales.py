@@ -57,14 +57,14 @@ class Template:
 
     def _build_semitones(self):
         val = 0
-        semis = []
+        semis = [0]
         for i in self.intervals:
             val += i
             semis.append(val)
         return semis
 
     def _build_pitch_classes(self):
-        return [notes.get_pc(s) for s in self.semitones[0:len(self.semitones) - 1]]
+        return [notes.C] + [notes.get_pc(s) for s in self.semitones[0:len(self.semitones) - 1]]
 
     def to_degree_string(self):
         return "-".join(map(str, self.degrees))
