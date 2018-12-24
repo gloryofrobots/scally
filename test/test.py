@@ -105,7 +105,8 @@ class TestPack(unittest.TestCase):
     def test_lib(self):
         lib = library.load()
         names, maj = lib.find_scale("maj")
-        print(names, maj)
+        names, scl = lib.find_scale("bekar6")
+        print(names, scl)
         
     # def test_pc(self):
     #     maj = scales.scale("2-2-1-2-2-2")
