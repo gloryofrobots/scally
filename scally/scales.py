@@ -13,7 +13,7 @@ DEGREE = {
 
     "8": 12, "#8": 13,
     "b9": 13, "9": 14, "#9": 15,
-    "b10": 15,  "10": 16, "#10": 16,
+    "b10": 15,  "10": 16, "#10": 17,
     "b11": 16, "11": 17, "#11": 18,
     "b12": 18, "12": 19, "#12": 20,
     "b13": 20, "13": 21, "#13": 22,
@@ -25,8 +25,14 @@ SEMITONES_TO_DEGREE = {
     0: "1", 1: "b2", 2: "2",
     3: "b3", 4: "3", 5: "4",
     6: "b5", 7: "5", 8: "b6",
-    9: "6", 10: "b7", 11: "7"
+    9: "6", 10: "b7", 11: "7",
+
+    12: "8", 13: "b9", 14: "9",
+    15: "b10", 16: "10", 17: "11",
+    18: "b12", 19: "12", 20: "b13",
+    21: "13", 22: "b14", 23: "14"
 }
+
 
 class Template:
 
@@ -35,9 +41,12 @@ class Template:
         self.intervals = intervals
         self.semitones = self._build_semitones()
         self.pcs = self._build_pitch_classes()
-        self.binary = self._build_binary()
         self.degrees = self._build_degrees()
 
+    def get_interval(self, step):
+        step = step % len(self.intervals)
+        return self.intervals[step]
+        
     def _build_degrees(self):
         degree = []
         for s in self.semitones[0:len(self.semitones) - 1]:
@@ -57,29 +66,16 @@ class Template:
     def _build_pitch_classes(self):
         return [notes.get_pc(s) for s in self.semitones[0:len(self.semitones) - 1]]
 
-    def _build_binary(self):
-        binary = []
-        for pc in notes.PITCH_CLASSES:
-            if pc in self.pcs:
-                binary.append(1)
-            else:
-                binary.append(0)
-
-        return binary
-
     def to_degree_string(self):
         return "-".join(map(str, self.degrees))
-
+    
     def to_semitone_string(self):
         return "-".join(map(str, self.semitones))
 
-    def to_binary_string(self):
-        return "".join(map(str, self.binary))
-
-    def fornote(self, tonic, octaves=1, pop_last=True):
+    def fornote(self, tonic, octaves=1):
         pc = tonic.pc
         octave = tonic.octave
-        return self.forkey(pc).build_octave(octave, octaves, pop_last)
+        return self.forkey(pc).build_octave(octave, octaves)
 
     def forrange(self, tonic, steps):
         pc = tonic.pc
@@ -90,18 +86,19 @@ class Template:
         if not isinstance(pc, notes.PitchClass):
             raise TypeError("PitchClass expected")
 
-        result = []
         current = pc
+        result = [current]
         for interval in self.intervals:
             # distance = i * notes.OCTAVE_SEMITONES + interval
             current = current + interval
-            result.append(current)
+            if current not in result:
+                result.append(current)
 
         result.pop()
-        return Scale(self, result)
+        return self.build(result)
 
     def __str__(self):
-        return "<scale %s>" % "-".join(map(str, self.intervals))
+        return "<scale %s>" % "-".join(map(str, self.degrees))
 
     def __repr__(self):
         return self.__str__()
@@ -112,6 +109,42 @@ class Template:
 
         return self.intervals == other.intervals
 
+
+class ScaleTemplate(Template):
+    def __init__(self, intervals):
+        super().__init__(intervals)
+        self.binary = self._build_binary()
+
+    def _build_binary(self):
+        binary = []
+        for pc in notes.PITCH_CLASSES:
+            if pc in self.pcs:
+                binary.append(1)
+            else:
+                binary.append(0)
+
+        return binary
+
+    def build(self, notes):
+        return Scale(self, notes)
+
+    def to_binary_string(self):
+        return "".join(map(str, self.binary))
+
+    def __str__(self):
+        return "<scale %s>" % "-".join(map(str, self.degrees))
+
+
+class ChordTemplate(Template):
+    def __init__(self, intervals):
+        super().__init__(intervals)
+
+    def __str__(self):
+        return "<chord %s>" % "-".join(map(str, self.degrees))
+
+    def build(self, pcs):
+        return Chord(self, pcs)
+
 class Scale:
     def __init__(self, template, pcs):
         super().__init__()
@@ -120,11 +153,11 @@ class Scale:
         self.root = self.pcs[0]
 
     def build_range(self, octave, steps):
-        result = []
         current = self.root.foroctave(octave)
+        result = [current]
         i = 0
         for _ in range(steps):
-            interval = self.template.intervals[i]
+            interval = self.template.get_interval(i)
             current = current + interval
             result.append(current)
             i += 1
@@ -132,18 +165,17 @@ class Scale:
 
         return result
 
-    def build_octave(self, octave, octaves=1, pop_last=True):
-        result = []
+    def build_octave(self, octave, octaves=1):
         current = self.root.foroctave(octave)
+        result = [current]
         for i in range(octaves):
             for interval in self.template.intervals:
                 # distance = i * notes.OCTAVE_SEMITONES + interval
                 note = current + interval
                 result.append(note)
                 current = note
-        if pop_last:
-            result.pop()
-
+        # last note will be start of new octave
+        result.pop()
         return result
 
     def has_note(self, note):
@@ -164,6 +196,8 @@ class Scale:
         elif isinstance(note, notes.PitchClass):
             return self.has_pc(note)
 
+class Chord(Scale):
+    pass
 
 class ScaleBuildError(RuntimeError):
     pass
@@ -181,24 +215,30 @@ def from_intervals(intervals):
     last = notes.OCTAVE_SEMITONES - s
     if last != 0:
         intervals.append(last)
-    if intervals[0] != 0:
-        intervals.insert(0, 0)
 
-    if sum(intervals) > notes.OCTAVE_SEMITONES:
-        raise ScaleBuildError(
-            "Sum of scale intervals exceeds %d semitones. " +
-            "Transition to octave tonic will be inserted automatically"
-            % notes.OCTAVE_SEMITONES
-        )
-    return Template(intervals)
+    if intervals[0] == 0:
+        intervals.pop(0)
+
+    # if intervals[0] != 0:
+    #     intervals.insert(0, 0)
+
+    # if sum(intervals) > notes.OCTAVE_SEMITONES:
+    #     raise ScaleBuildError(
+    #         "Sum of scale intervals exceeds %d semitones. " +
+    #         "Transition to octave tonic will be inserted automatically"
+    #         % notes.OCTAVE_SEMITONES
+    #     )
+    return ScaleTemplate(intervals)
 
 
 def from_semitones(semitones):
     if isinstance(semitones, str):
         semitones = parse_int_list(semitones)
     # assure octave interval
-    if semitones[len(semitones) - 1] != 12:
+    if max(semitones) < 12:
+    # if semitones[len(semitones) - 1] != 12:
         semitones = semitones + [12]
+
 
     if len(set(semitones)) != len(semitones):
         raise ScaleBuildError("Duplicate scale semitones")
@@ -210,7 +250,6 @@ def from_semitones(semitones):
         interval = s - prev
         intervals.append(interval)
         prev = s
-
     return from_intervals(intervals)
 
 
@@ -245,6 +284,7 @@ def from_binary(binary):
 
 
 def from_degrees(degrees):
+    # print("DE", degrees)
     if isinstance(degrees, str):
         degrees = [val.strip() for val in degrees.split("-")]
 
@@ -258,5 +298,6 @@ def from_degrees(degrees):
         interval = DEGREE[d]
         intervals.append(interval)
     return from_semitones(intervals)
+
 
 chromatic = from_binary("1" * 12)

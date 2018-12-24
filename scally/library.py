@@ -46,13 +46,16 @@ class Record:
 
 
 class Library:
+    FILENAME = "default_lib.yml"
+    # FILENAME = "libtest.yml"
+
     def __init__(self, default_filename=None):
         super().__init__()
         self.scales = []
         self.chords = []
         self.instruments = []
         if default_filename is None:
-            self.default_filename = os.path.join(os.path.dirname(__file__), "default_lib.yml")
+            self.default_filename = os.path.join(os.path.dirname(__file__), self.FILENAME)
         else:
             self.default_filename = default_filename
 
@@ -62,9 +65,12 @@ class Library:
         with open(filename) as f:
             txt = f.read()
         data = yaml.load(txt)
-        self.add_instruments(data["instruments"])
-        self.add_scales(data["scales"])
-        self.add_chords(data["chords"])
+        if "instruments" in data:
+            self.add_instruments(data["instruments"])
+        if "scales" in data:
+            self.add_scales(data["scales"])
+        if "chords" in data:
+            self.add_chords(data["chords"])
 
     def add_instruments(self, data):
         for obj in data:
@@ -109,7 +115,11 @@ class Library:
     def _find(self, name, records):
         best_id, maxratio = -1,-1
         for i,record in enumerate(records):
-            ratio = record.similar(name)
+            try:
+                ratio = record.similar(name)
+            except:
+                print("Error", record.names)
+                continue
             if ratio > maxratio:
                 best_id = i
                 maxratio = ratio

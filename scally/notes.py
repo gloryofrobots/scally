@@ -397,4 +397,5 @@ def has_pc(name):
     return False
 
 def get_pc(number):
+    number = number % len(PITCH_CLASSES)
     return PITCH_CLASSES[number]
