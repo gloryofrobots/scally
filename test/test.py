@@ -101,24 +101,38 @@ class TestPack(unittest.TestCase):
 
     def test_lib(self):
         lib = library.load()
-        names, scl = lib.find_scale("maj")
-        names, ch = lib.find_chord('maj')
+        # names, scl = lib.find_scale("maj")
+        # names, ch = lib.find_chord('maj')
 
-        self.assertEqual(ch.fornote(C4, 2), [C4, E4, G4, B4, C5, E5, G5, B5])
-        self.assertEqual(scl.fornote(C4, 2), [C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5, G5, A5, B5])
+        # self.assertEqual(ch.fornote(C4, 2), [C4, E4, G4, B4, C5, E5, G5, B5])
+        # self.assertEqual(scl.fornote(C4, 2), [C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5, G5, A5, B5])
 
-        names, scl = lib.find_scale("bb7")
-        self.assertEqual(
-            scl.fornote(C4, 3),
-            [C4, Cs4, Ds4, E4, Fs4, Gs4, A4, C5, Cs5, Ds5, E5, Fs5, Gs5, A5, C6, Cs6, Ds6, E6, Fs6, Gs6, A6])
+        # names, scl = lib.find_scale("bb7")
+        # self.assertEqual(
+        #     scl.fornote(C4, 3),
+        #     [C4, Cs4, Ds4, E4, Fs4, Gs4, A4, C5, Cs5, Ds5, E5, Fs5, Gs5, A5, C6, Cs6, Ds6, E6, Fs6, Gs6, A6])
 
-        names, ch = lib.find_chord('13sus4(b9)')
-        self.assertEqual(
-            ch.fornote(C4, 5),
-            [C4, F4, G4, As4, Cs5, A5, C5, F5, G5, As5, Cs6, A6, C6, F6,
-             G6, As6, Cs7, A7, C7, F7, G7, As7, Cs8, A8, C8, F8, G8, As8, Cs9, A9])
+        # names, ch = lib.find_chord('13sus4(b9)')
+        # self.assertEqual(
+        #     ch.fornote(C4, 5),
+        #     [C4, F4, G4, As4, Cs5, A5, C5, F5, G5, As5, Cs6, A6, C6, F6,
+        #      G6, As6, Cs7, A7, C7, F7, G7, As7, Cs8, A8, C8, F8, G8, As8, Cs9, A9])
 
+        
+        # names, ch = lib.find_chord('#13')
+        # chc = ch.forkey(C)
+        # print(names, ch, chc.pcs)
 
+        # names, scl = lib.find_scale('dorian')
+        # sclc = scl.forkey(C)
+        # print(names, scl, scl.pcs)
+        # print(chc.is_part_of(sclc))
+        names, ch = lib.find_chord('dim')
+        print("---", names, ch, ch.pcs)
+        scales = lib.find_chord_scales(ch.forkey(C))
+        # print(scales)
+        for s in scales:
+            print (s[0], s[1].pcs)
     # def test_pc(self):
     #     maj = scales.scale("2-2-1-2-2-2")
     #     print(maj.forkey(C).pcs)

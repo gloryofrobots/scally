@@ -13,7 +13,11 @@ class ParseLibError(RuntimeError):
 
 class Record:
     def __init__(self, keys, value):
-        self._names = keys
+        if isinstance(keys, str):
+            self._names = [keys]
+        else:
+            self._names = keys
+
         self._value = value
 
     @property
@@ -136,6 +140,15 @@ class Library:
     def find_instrument(self, name):
         return self._find(name, self.instruments)
 
+    def find_chord_scales(self, chord):
+        result = []
+        for r in self.scales:
+            name, tpl = r
+            scale = tpl.forkey(chord.root)
+            if chord.is_part_of(scale):
+                result.append((name, scale))
+        return result
+        
 
 def load():
     return Library()

@@ -3,6 +3,14 @@ chords:
    name: ['maj7#11']
    degrees: '1-3-5-7-#11'
 
+  - # -----------------------------
+   name: [dim]
+   degrees: '1-b3-b5'
+
+  - # -----------------------------
+   name: [13sus4(b9)]
+   degrees: '1-4-5-b7-b9-13'
+
 instruments:
   - # -----------------------------
    name: [guitar, standart guitar]
@@ -14,3 +22,13 @@ scales:
    name: [maj, natural major, major, ionian]
    category: natural
    degrees: 1 2 3 4 5 6 7
+
+  - # -----------------------------
+   name: dorian
+   category: natural
+   degrees: 1 2 b3 4 5 6 b7
+
+  - # -----------------------------
+   name: [overtone minor, 'dorian #4', 'ukainian dorian']
+   category: harmonic-minor
+   degrees:  '1 2 b3 #4 5 6 b7'

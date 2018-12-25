@@ -103,6 +103,7 @@ class PitchClass:
         if not isinstance(other, PitchClass):
             return False
 
+        # print("__EQ__", self, other, self.value, other.value)
         return self.value == other.value
 
     def __ne__(self, other):

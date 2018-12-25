@@ -94,7 +94,7 @@ class Template:
             if current not in result:
                 result.append(current)
 
-        result.pop()
+        # result.pop()
         return self.build(result)
 
     def __str__(self):
@@ -108,7 +108,6 @@ class Template:
             return False
 
         return self.intervals == other.intervals
-
 
 class ScaleTemplate(Template):
     def __init__(self, intervals):
@@ -152,6 +151,7 @@ class Scale:
         self.pcs = pcs
         self.root = self.pcs[0]
 
+        
     def build_range(self, octave, steps):
         current = self.root.foroctave(octave)
         result = [current]
@@ -178,6 +178,12 @@ class Scale:
         result.pop()
         return result
 
+    def is_part_of(self, scale):
+        for pc in self.pcs:
+            if not scale.has_pc(pc):
+                return False
+        return True
+
     def has_note(self, note):
         for pc in self.pcs:
             if pc.has_note(note):
@@ -195,6 +201,12 @@ class Scale:
             return self.has_note(note)
         elif isinstance(note, notes.PitchClass):
             return self.has_pc(note)
+
+    def __str__(self):
+        return "<scale %s>" % "-".join(map(str, self.template.degrees))
+
+    def __repr__(self):
+        return str(self)
 
 class Chord(Scale):
     pass
