@@ -90,30 +90,42 @@ class Library:
         txt = "-".join([s.strip() for s in txt.split(" ")])
         return txt
 
-    def parse_template(self, obj):
+    def parse_scale(self, obj):
+        names = obj["name"]
         if "intervals" in obj:
-            tpl = scales.from_intervals(self.normalize_seq(obj["intervals"]))
-        elif "binary" in obj:
-            tpl = scales.from_binary(obj["binary"])
+            tpl = scales.scale_intervals(self.normalize_seq(obj["intervals"]), names)
         elif "semitones" in obj:
-            tpl = scales.from_semitones(self.normalize_seq(obj["semitones"]))
+            tpl = scales.scale_semitones(self.normalize_seq(obj["semitones"]), names)
         elif "degrees" in obj:
-            tpl = scales.from_degrees(self.normalize_seq(obj["degrees"]))
+            tpl = scales.scale(self.normalize_seq(obj["degrees"]), names)
         else:
-            raise ParseLibError("Expected to have some formula for %s" % str(obj))
+            raise ParseLibError("Expected to have degrees|intervals|semitones for %s" % str(names))
+
+        return tpl
+
+    def parse_chord(self, obj):
+        names = obj["name"]
+        if "intervals" in obj:
+            tpl = scales.chord_intervals(self.normalize_seq(obj["intervals"]), names)
+        elif "semitones" in obj:
+            tpl = scales.chord_semitones(self.normalize_seq(obj["semitones"]), names)
+        elif "degrees" in obj:
+            tpl = scales.chord(self.normalize_seq(obj["degrees"]), names)
+        else:
+            raise ParseLibError("Expected to have degrees|intervals|semitones la for %s" % str(names))
 
         return tpl
 
     def add_chords(self, data):
         for obj in data:
             name = obj["name"]
-            tpl = self.parse_template(obj)
+            tpl = self.parse_chord(obj)
             self.chords.append(Record(name, tpl))
 
     def add_scales(self, data):
         for obj in data:
             name = obj["name"]
-            tpl = self.parse_template(obj)
+            tpl = self.parse_scale(obj)
             self.scales.append(Record(name, tpl))
 
     def _find(self, name, records):
@@ -129,26 +141,84 @@ class Library:
                 maxratio = ratio
         if best_id == -1:
             return None
-        return records[best_id]
+        return records[best_id].value
 
+    def build_scale(self, root, name):
+        tpl = self.find_scale(name)
+        if tpl is None:
+            return None
+        return tpl.forkey(root)
+
+    def build_chord(self, root, name):
+        tpl = self.find_chord(name)
+        if tpl is None:
+            return None
+        return tpl.forkey(root)
+        
     def find_chord(self, name):
         return self._find(name, self.chords)
 
     def find_scale(self, name):
         return self._find(name, self.scales)
 
+    def find_similar(self, scl, records):
+        result = []
+        for r in records:
+            _, scale = r
+            if scl.is_part_of(scale):
+                result.append(scale)
+        return result
+
+    def find_scale_intervals(self, intervals):
+        scl = scales.scale_intervals(intervals)
+        return self.find_similar(scl, self.scales)
+
+    def find_scale_degrees(self, degrees):
+        scl = scales.scale(degrees)
+        return self.find_similar(scl, self.scales)
+
+    def find_chord_intervals(self, intervals):
+        scl = scales.chord_intervals(intervals)
+        return self.find_similar(scl, self.chords)
+
+    def find_chord_degrees(self, degrees):
+        scl = scales.chord(degrees)
+        return self.find_similar(scl, self.chords)
+
     def find_instrument(self, name):
         return self._find(name, self.instruments)
 
-    def find_chord_scales(self, chord):
+    def build_chord_root_scales(self, chord):
         result = []
         for r in self.scales:
             name, tpl = r
             scale = tpl.forkey(chord.root)
             if chord.is_part_of(scale):
-                result.append((name, scale))
-        return result
-        
+                result.append(scale)
+        return self._sort_scales(result)
 
+    def _sort_scales(self, scales):
+        return list(sorted(scales, key=lambda s: s.root))
+
+    def build_chord_scales(self, ch):
+        result = []
+        for r in self.scales:
+            tpl = r.value
+            for pc in notes.PITCH_CLASSES:
+                scl = tpl.forkey(pc) 
+                if ch.is_part_of(scl):
+                    result.append(scl)
+        return self._sort_scales(result)
+        
+    def build_scale_chords(self, scl):
+        result = []
+        for r in self.chords:
+            ch_tpl = r.value
+            for pc in notes.PITCH_CLASSES:
+                ch = ch_tpl.forkey(pc) 
+                if ch.is_part_of(scl):
+                    result.append(ch)
+        return self._sort_scales(result)
+        
 def load():
     return Library()

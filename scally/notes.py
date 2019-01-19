@@ -356,10 +356,6 @@ def tones_to_semitones(n):
     return n * 2.0
 
 
-def get_pc_by_name(name):
-    return _PITCH_CLASSES_MAPPING[name]
-
-
 def octave_to_semitones(octave):
     return OCTAVE_SEMITONES * octave
 
@@ -400,3 +396,6 @@ def has_pc(name):
 def get_pc(number):
     number = number % len(PITCH_CLASSES)
     return PITCH_CLASSES[number]
+
+def get_pc_by_name(name):
+    return _PITCH_CLASSES_MAPPING[name.capitalize()]

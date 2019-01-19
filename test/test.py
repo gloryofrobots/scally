@@ -62,85 +62,87 @@ class TestPack(unittest.TestCase):
 
     def assertScales(self, sc1, sc2):
         self.assertEqual(sc1, sc2)
-        self.assertEqual(sc1.fornote(C4), sc2.fornote(C4))
-        self.assertNotEqual(sc1.fornote(C5), sc2.fornote(C4))
+        self.assertEqual(sc1.build_octave(C4), sc2.build_octave(C4))
+        self.assertNotEqual(sc1.build_octave(C5), sc2.build_octave(C4))
         
     def test_scales(self):
         print("---test scales ---")
-        maj0 = scales.from_intervals([0, 2, 2, 1, 2, 2, 2, 1])
-        maj1 = scales.from_intervals([2, 2, 1, 2, 2, 2])
-        maj2 = scales.from_intervals("2-2-1-2-2-2")
-        maj3 = scales.from_semitones([2, 4, 5, 7, 9, 11])
-        maj4 = scales.from_semitones("0-2-4-5-7-9-11-12")
-        maj5 = scales.from_binary("101011010101")
-        maj6 = scales.from_binary([1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1])
-        maj7 = scales.from_degrees("1-2-3-4-5-6-7")
-        maj8 = scales.from_degrees(["1","2","3", "4", "5", "6", "7"])
+        maj0 = scales.scale_intervals([0, 2, 2, 1, 2, 2, 2, 1])
+        maj1 = scales.scale_intervals([2, 2, 1, 2, 2, 2])
+        maj2 = scales.scale_intervals("2-2-1-2-2-2")
+        maj3 = scales.scale_semitones([2, 4, 5, 7, 9, 11])
+        maj4 = scales.scale_semitones("0-2-4-5-7-9-11-12")
+        maj7 = scales.scale("1-2-3-4-5-6-7")
+        maj8 = scales.scale(["1","2","3", "4", "5", "6", "7"])
 
-        # maj9 = scales.from_degrees("1-2-b3-4-5-b6-7")
-        # min1 = scales.from_degrees("1-b2-b3-b4-b5-b6-6")
+        # maj9 = scales.scale("1-2-b3-4-5-b6-7")
+        # min1 = scales.scale("1-b2-b3-b4-b5-b6-6")
 
-        self.assertScales(scales.from_degrees("1-2-b3-4-5-b6-7"), scales.from_degrees("1-2-#2-4-5-b6-7"))
+        self.assertScales(scales.scale("1-2-b3-4-5-b6-7"), scales.scale("1-2-#2-4-5-b6-7"))
 
-        self.assertEqual(maj0.to_binary_string(), "101011010101")
         self.assertEqual(maj0.to_semitone_string(), "0-2-4-5-7-9-11-12")
         self.assertEqual(maj0.to_degree_string(), "1-2-3-4-5-6-7")
 
-        self.assertScales(scales.from_intervals("2-2-1-2-2-2-1"), scales.from_intervals("2-2-1-2-2-2"))
-        self.assertScales(scales.from_intervals("0-2-2-1-2-2-2-1"), scales.from_intervals("0-2-2-1-2-2-2"))
+        self.assertScales(scales.scale_intervals("2-2-1-2-2-2-1"), scales.scale_intervals("2-2-1-2-2-2"))
+        self.assertScales(scales.scale_intervals("0-2-2-1-2-2-2-1"), scales.scale_intervals("0-2-2-1-2-2-2"))
 
         self.assertScales(maj0, maj1)
         self.assertScales(maj1, maj2)
         self.assertScales(maj3, maj4)
 
         self.assertScales(maj4, maj1)
-        self.assertScales(maj1, maj5)
-        self.assertScales(maj5, maj6)
         self.assertScales(maj7, maj8)
         self.assertScales(maj1, maj8)
 
     def test_lib(self):
         lib = library.load()
-        # names, scl = lib.find_scale("maj")
-        # names, ch = lib.find_chord('maj')
+        scl = lib.find_scale("maj")
+        ch = lib.find_chord('maj7')
+        self.assertEqual(ch.build_octave(C4, 2), [C4, E4, G4, B4, C5, E5, G5, B5])
+        self.assertEqual(scl.build_octave(C4, 2), [C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5, G5, A5, B5])
 
-        # self.assertEqual(ch.fornote(C4, 2), [C4, E4, G4, B4, C5, E5, G5, B5])
-        # self.assertEqual(scl.fornote(C4, 2), [C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5, G5, A5, B5])
+        scl = lib.find_scale("bb7")
+        self.assertEqual(
+            scl.build_octave(C4, 3),
+            [C4, Cs4, Ds4, E4, Fs4, Gs4, A4, C5, Cs5, Ds5, E5, Fs5, Gs5, A5, C6, Cs6, Ds6, E6, Fs6, Gs6, A6])
 
-        # names, scl = lib.find_scale("bb7")
-        # self.assertEqual(
-        #     scl.fornote(C4, 3),
-        #     [C4, Cs4, Ds4, E4, Fs4, Gs4, A4, C5, Cs5, Ds5, E5, Fs5, Gs5, A5, C6, Cs6, Ds6, E6, Fs6, Gs6, A6])
-
-        # names, ch = lib.find_chord('13sus4(b9)')
-        # self.assertEqual(
-        #     ch.fornote(C4, 5),
-        #     [C4, F4, G4, As4, Cs5, A5, C5, F5, G5, As5, Cs6, A6, C6, F6,
-        #      G6, As6, Cs7, A7, C7, F7, G7, As7, Cs8, A8, C8, F8, G8, As8, Cs9, A9])
+        ch = lib.find_chord('13sus4(b9)')
+        self.assertEqual(
+            ch.build_octave(C4, 5),
+            [C4, F4, G4, As4, Cs5, A5, C5, F5, G5, As5, Cs6, A6, C6, F6,
+             G6, As6, Cs7, A7, C7, F7, G7, As7, Cs8, A8, C8, F8, G8, As8, Cs9, A9])
 
         
-        # names, ch = lib.find_chord('#13')
-        # chc = ch.forkey(C)
-        # print(names, ch, chc.pcs)
+        self._test_algos(lib)
 
-        # names, scl = lib.find_scale('dorian')
-        # sclc = scl.forkey(C)
-        # print(names, scl, scl.pcs)
-        # print(chc.is_part_of(sclc))
-        names, ch = lib.find_chord('dim')
-        print("---", names, ch, ch.pcs)
-        scales = lib.find_chord_scales(ch.forkey(C))
-        # print(scales)
-        for s in scales:
-            print (s[0], s[1].pcs)
+    def _test_algos(self, lib):
+        scl = lib.find_scale('lydian')
+        ch = lib.build_chord(C, 'maj13#11')
+        scales = lib.build_chord_root_scales(ch)
+        self.assertScales(scl, scales[0].template)
+
+        scl = lib.build_scale(A, "whole tone")
+        chords = lib.build_scale_chords(scl)
+
+        
+        ch = lib.build_chord(C, 'dim7')
+        scales = lib.build_chord_scales(ch)
+
+        scl = lib.find_scale_intervals([2, 2, 1, 2, 2, 2])
+        scl2 = lib.find_scale_degrees("1-2-3-4-5-6-7")
+        self.assertScales(scl[0], scl2[0])
+
+        # list(map(print, scales))
+
+        # print(ch)
     # def test_pc(self):
     #     maj = scales.scale("2-2-1-2-2-2")
     #     print(maj.forkey(C).pcs)
 
     # def test_fret(self):
-    #     fret = frets.Fret([E2, As2, D3, G3, B3, E4], 24)
+    #     fret = frets.fret(24, [E2, As2, D3, G3, B3, E4])
     #     view = frets.FretView(fret)
-    #     maj = scales.scale("2-2-1-2-2-2")
+    #     maj = scales.scale_intervals("2-2-1-2-2-2")
     #     print(maj.forkey(C).pcs)
     #     # view.add_filter(maj.forkey(notes.C))
     #     print(view.to_ascii())

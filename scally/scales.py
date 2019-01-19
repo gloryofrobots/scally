@@ -36,11 +36,11 @@ SEMITONES_TO_DEGREE = {
 
 class Template:
 
-    def __init__(self, intervals):
+    def __init__(self, intervals, names):
         super().__init__()
+        self.names = names
         self.intervals = intervals
         self.semitones = self._build_semitones()
-        self.pcs = self._build_pitch_classes()
         self.degrees = self._build_degrees()
 
     def get_interval(self, step):
@@ -63,21 +63,18 @@ class Template:
             semis.append(val)
         return semis
 
-    def _build_pitch_classes(self):
-        return [notes.C] + [notes.get_pc(s) for s in self.semitones[0:len(self.semitones) - 1]]
-
     def to_degree_string(self):
         return "-".join(map(str, self.degrees))
     
     def to_semitone_string(self):
         return "-".join(map(str, self.semitones))
 
-    def fornote(self, tonic, octaves=1):
+    def build_octave(self, tonic, octaves=1):
         pc = tonic.pc
         octave = tonic.octave
         return self.forkey(pc).build_octave(octave, octaves)
 
-    def forrange(self, tonic, steps):
+    def build_range(self, tonic, steps):
         pc = tonic.pc
         octave = tonic.octave
         return self.forkey(pc).build_range(octave, steps)
@@ -97,11 +94,14 @@ class Template:
         # result.pop()
         return self.build(result)
 
-    def __str__(self):
-        return "<scale %s>" % "-".join(map(str, self.degrees))
+    def is_part_of(self, other):
+        for st in self.semitones:
+            if not other.has_semitone(st):
+                return False
+        return True
 
-    def __repr__(self):
-        return self.__str__()
+    def has_semitone(self, st):
+        return st in self.semitones
 
     def __eq__(self, other):
         if not isinstance(other, Template):
@@ -109,37 +109,23 @@ class Template:
 
         return self.intervals == other.intervals
 
+    def __str__(self):
+        formula ="-".join(map(str, self.degrees))
+        name = "|".join(self.names)
+
+        return "<%s (%s) %s>" % (self.__class__.__name__, name, formula) 
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class ScaleTemplate(Template):
-    def __init__(self, intervals):
-        super().__init__(intervals)
-        self.binary = self._build_binary()
-
-    def _build_binary(self):
-        binary = []
-        for pc in notes.PITCH_CLASSES:
-            if pc in self.pcs:
-                binary.append(1)
-            else:
-                binary.append(0)
-
-        return binary
-
     def build(self, notes):
         return Scale(self, notes)
 
-    def to_binary_string(self):
-        return "".join(map(str, self.binary))
-
-    def __str__(self):
-        return "<scale %s>" % "-".join(map(str, self.degrees))
 
 
 class ChordTemplate(Template):
-    def __init__(self, intervals):
-        super().__init__(intervals)
-
-    def __str__(self):
-        return "<chord %s>" % "-".join(map(str, self.degrees))
 
     def build(self, pcs):
         return Chord(self, pcs)
@@ -151,7 +137,6 @@ class Scale:
         self.pcs = pcs
         self.root = self.pcs[0]
 
-        
     def build_range(self, octave, steps):
         current = self.root.foroctave(octave)
         result = [current]
@@ -202,14 +187,35 @@ class Scale:
         elif isinstance(note, notes.PitchClass):
             return self.has_pc(note)
 
+    @property
+    def names(self):
+        return self.template.names
+    
+    @property
+    def name(self):
+        if len(self.names) == 0:
+            return "%s-UNKNOWN" % str(self.root)
+        else:
+            return "%s(%s)" % (str(self.root), "|".join(self.names))
+        
     def __str__(self):
-        return "<scale %s>" % "-".join(map(str, self.template.degrees))
+        pcs = "-".join(map(str, self.pcs))
+        return "<%s %s %s>" % (self.__class__.__name__, self.name, pcs)
 
     def __repr__(self):
         return str(self)
 
 class Chord(Scale):
+    @property
+    def name(self):
+        if len(self.names) == 0:
+            return "%s-UNKNOWN" % str(self.root)
+        if len(self.names) == 1:
+            return "%s%s" % (str(self.root), self.names[0])
+        else:
+            return "%s%s(%s)" % (str(self.root), self.names[0], ",".join(self.names[1:]))
     pass
+
 
 class ScaleBuildError(RuntimeError):
     pass
@@ -218,8 +224,7 @@ class ScaleBuildError(RuntimeError):
 def parse_int_list(semitones):
     return [int(val.strip()) for val in semitones.split("-")]
 
-
-def from_intervals(intervals):
+def _from_intervals(intervals, names, tpl):
     if isinstance(intervals, str):
         intervals = parse_int_list(intervals)
     intervals = intervals[:]
@@ -240,10 +245,10 @@ def from_intervals(intervals):
     #         "Transition to octave tonic will be inserted automatically"
     #         % notes.OCTAVE_SEMITONES
     #     )
-    return ScaleTemplate(intervals)
+    return tpl(intervals, names)
 
 
-def from_semitones(semitones):
+def _from_semitones(semitones, name, tpl):
     if isinstance(semitones, str):
         semitones = parse_int_list(semitones)
     # assure octave interval
@@ -262,40 +267,10 @@ def from_semitones(semitones):
         interval = s - prev
         intervals.append(interval)
         prev = s
-    return from_intervals(intervals)
+    return _from_intervals(intervals, name, tpl)
 
 
-def parse_binary_list(binary):
-    return list(map(int, list(iter(binary))))
-
-
-def from_binary(binary):
-    intervals = []
-    if isinstance(binary, str):
-        binary = parse_binary_list(binary)
-
-    if len(binary) != 12:
-        raise ScaleBuildError("Binary list must consists of 12 zeros or ones")
-
-    if binary[0] != 1:
-        raise ScaleBuildError("Expected 1 in the leftmost position")
-
-    if len(set(binary)) > 2:
-        raise ScaleBuildError("Invalid input. only ones and zeros are allowed")
-
-    intervals = []
-    prev = notes.get_pc(0)
-    for i, ch in enumerate(binary):
-        if ch == 1:
-            note = notes.get_pc(i)
-            interval = note - prev
-            intervals.append(interval)
-            prev = note
-
-    return from_intervals(intervals)
-
-
-def from_degrees(degrees):
+def _from_degrees(degrees, name, tpl):
     # print("DE", degrees)
     if isinstance(degrees, str):
         degrees = [val.strip() for val in degrees.split("-")]
@@ -309,7 +284,34 @@ def from_degrees(degrees):
 
         interval = DEGREE[d]
         intervals.append(interval)
-    return from_semitones(intervals)
+    return _from_semitones(intervals, name, tpl)
+
+def _normalize_names(names):
+    if names is None:
+        return []
+    if isinstance(names, str):
+        return [names]
+    if not isinstance(names, list):
+        raise TypeError("list with names expected")
+    return names
+
+def scale(degrees, names = None):
+    return _from_degrees(degrees, _normalize_names(names), ScaleTemplate)
+
+def scale_intervals(intervals, names = None):
+    return _from_intervals(intervals, _normalize_names(names), ScaleTemplate)
+
+def scale_semitones(semis, names = None):
+    return _from_semitones(semis, _normalize_names(names), ScaleTemplate)
+
+def chord(degrees, names = None):
+    return _from_degrees(degrees, _normalize_names(names), ChordTemplate)
+
+def chord_intervals(intervals, names = None):
+    return _from_intervals(intervals, _normalize_names(names), ChordTemplate)
+
+def chord_semitones(semis, names = None):
+    return _from_semitones(semis, _normalize_names(names), ChordTemplate)
 
 
-chromatic = from_binary("1" * 12)
+chromatic = scale_intervals([1] * 11)

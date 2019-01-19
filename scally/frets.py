@@ -29,7 +29,7 @@ class Fret:
         self.strings = []
         self.width = length + 1
         for root in roots:
-            notes = scales.chromatic.forrange(root, self.width)
+            notes = scales.chromatic.build_range(root, self.width)
             self.strings.append(String(notes))
         self.height = len(self.strings)
 
@@ -189,3 +189,6 @@ def fret(length, roots):
     if isinstance(roots[0], str):
         roots = [notes.note(r) for r in roots]
     return Fret(length, roots)
+
+def view(length, roots):
+    return FretView(fret(length, roots))
